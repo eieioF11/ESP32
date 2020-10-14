@@ -1,0 +1,24 @@
+{
+    "Header": {
+        "Comment": "All values are metric (mm)",
+        "CreationDate": "2019-05-09T12:41:54Z",
+        "GenerationSoftware": {
+            "Application": "EAGLE",
+            "Vendor": "Autodesk",
+            "Version": "9.3.2"
+        },
+        "Part": "Single"
+    },
+    "Overall": {
+        "BoardThickness": 1.67,
+        "LayerNumber": 2,
+        "Name": {
+            "ProjectId": "ESPmotorver1"
+        },
+        "Owner": "E N <eieioeiji1351@gmail.com>",
+        "Size": {
+            "X": 67.412297,
+            "Y": 62.23
+        }
+    }
+}
