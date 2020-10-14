@@ -1,11 +1,11 @@
 #include <Arduino.h>
 #include "Controller.h"
 
-void setup() 
+void setup()
 {
   Controllerinit();//ESP32mother Initialize
 }
-void loop() 
+void loop()
 {
   ControllerUpdate();
 }
