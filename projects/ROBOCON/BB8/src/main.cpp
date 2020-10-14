@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "Setup.h"
+#include "Setup_ROBOCON.h"
 #include <SPI.h>
 #include <Wire.h>
 #include "ROBO_MD.h"
