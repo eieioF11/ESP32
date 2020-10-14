@@ -117,8 +117,8 @@ void move()
   delay(500);
 }
 
-const IPAddress ip(192,168,30,3);
-const IPAddress subnet(255,255,255,0);
+//const IPAddress ip(192,168,30,3);
+//const IPAddress subnet(255,255,255,0);
 
 void setup() 
 {
