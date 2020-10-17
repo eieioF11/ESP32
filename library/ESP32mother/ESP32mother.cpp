@@ -574,7 +574,6 @@ void ESPinit()
     Vmonitor_setup();
 
     tone(beep,310);
-
     /*Motor Initialize*/
     motorsetup();
     /*Encoder Initialize*/
