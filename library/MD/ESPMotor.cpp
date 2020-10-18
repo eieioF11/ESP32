@@ -11,15 +11,28 @@ ESPMotor::ESPMotor(int pin1_,int pin2_,gpio_num_t sp,int A,int B,int resolution_
   pidmd=new PID(Kp,Ki,Kd,-1.0,1.0,dt);
   t->Standby(ON);
   e->Reverse(true);
+  mode=PID_;
+};
+ESPMotor::ESPMotor(int pin1_,int pin2_,gpio_num_t sp)
+{
+  t=new TB6612FNG(pin1_,pin2_,sp);
+  mode=DUTY;
 };
 void ESPMotor::set()
 {
-  pidmd->setgain(Kp,Ki,Kd);
+  if(mode==PID_)
+    pidmd->setgain(Kp,Ki,Kd);
   t->Stop();
   speed=0;
 }
 void ESPMotor::Move(float val)
 {
+  if(mode==DUTY)
+  {
+    if(reverse)val*=-1;
+    t->move(val);
+    return;
+  }
   t->Standby(ON);
   if(reverse)val*=-1;
   if((val>0&&speed<0)||(val<0&&speed>0)){speed=0;pidmd->reset();}
@@ -29,11 +42,15 @@ void ESPMotor::Move(float val)
 }
 void ESPMotor::Update()
 {
+  if(mode==DUTY)
+    return;
   e->Update();
   now_val=e->get_rps();
 }
 void ESPMotor::Reset()
 {
+  if(mode==DUTY)
+    return;
   speed=0.0f;
   pidmd->reset();
   e->reset();

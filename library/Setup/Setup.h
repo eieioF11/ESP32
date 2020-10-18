@@ -4,12 +4,13 @@
 #include <Arduino.h>
 
 //User Settings------------------------------------
-#define ESP_MODE        ESP_NONE        //ESP_PS3:PS3 ESP_BTS: BluetoothSerial, ESP_NONE: NONE
-#define ESP_OTA         ON              //Enable OTA(ON/OFF)
-#define ESP_SSID        "ESP32ROBO"     //set SSID for OTA
-#define ESP_WIFIPASS    "roborobo"      //set password for wifi
-#define LocalPort       10000           //local host
-#define ESP_BTSNAME     "ESP32ROBO"     //set name for BTS
+#define ESP_MODE        ESP_NONE         //ESP_PS3:PS3 ESP_BTS: BluetoothSerial, ESP_NONE: NONE
+#define ESP_OTA         ON               //Enable OTA(ON/OFF)
+#define ESP_SSID        "ESP32ROBO"      //set SSID for OTA
+#define ESP_WIFIPASS    "roborobo"       //set password for wifi
+#define LocalPort       10000            //local host
+#define ESP_BTSNAME     "ESP32ROBO"      //set name for BTS
+#define MOTORMODE       DUTY            //set motor mode(PID_/DUTY)
 #define SD              ON              //SD card activation
 #define ROS             OFF             //Enable ROS
 #define ROSdatasize     5               //ROS transmission data size [byte]
@@ -23,6 +24,7 @@ const IPAddress subnet(255,255,255,0);  //sub-net mask
 const IPAddress ip2(192, 168, 30, 5);   //Controller ip
 const IPAddress gateway(192,168, 30, 1);//gateway settings
 const IPAddress DNS(192, 168, 30, 90);  //DNS settings
+#define MAC_ADD (char*)"24:0a:c4:0f:c3:aa"//PS3controller MAC Address
 //-------------------------------------------------
 
 //PIN Assign -----------------------

@@ -10,14 +10,14 @@ int mc=0,c=0;
 bool c1=false;
 void noTone(int pin)
 {
-  ledcWriteTone(LEDC_CHANNEL_2, 0.0) ;
+    ledcWriteTone(LEDC_CHANNEL_2, 0.0) ;
 }
- 
+
 void tone(int pin,int freq)
 {
-  ledcSetup(LEDC_CHANNEL_2, LEDC_BASE_FREQ, LEDC_TIMER_13_BIT) ;
-  ledcAttachPin(pin, LEDC_CHANNEL_2) ; // CH2をSOUNDERに
-  ledcWriteTone(LEDC_CHANNEL_2, freq) ;
+    ledcSetup(LEDC_CHANNEL_2, LEDC_BASE_FREQ, LEDC_TIMER_13_BIT) ;
+    ledcAttachPin(pin, LEDC_CHANNEL_2) ; // CH2をSOUNDERに
+    ledcWriteTone(LEDC_CHANNEL_2, freq) ;
 }
 
 void melreset()
@@ -25,7 +25,7 @@ void melreset()
     noTone(beep);
     mc=0;
     c=0;
-    c1=false;   
+    c1=false;
 }
 
 void mel1()
@@ -51,7 +51,7 @@ void mel1()
             c1=true;
         }
     }
-    else 
+    else
     {
         noTone(beep);
         mc++;
@@ -62,7 +62,7 @@ void mel1()
     c++;
     /*
            GABC DE A   AFAG AFFAG
-    octave 4445 55 5   4444 44444 
+    octave 4445 55 5   4444 44444
     */
 }
 void mel2()
@@ -92,7 +92,7 @@ void mel2()
             c1=true;
         }
     }
-    else 
+    else
     {
         noTone(beep);
         mc++;
@@ -128,7 +128,7 @@ void mel3()
             c1=true;
         }
     }
-    else 
+    else
     {
         noTone(beep);
         mc++;
@@ -136,7 +136,7 @@ void mel3()
         c=0;
         c1=false;
     }
-    c++;   
+    c++;
 }
 bool conectbeep(int port)
 {
@@ -156,7 +156,7 @@ bool conectbeep(int port)
             c1=true;
         }
     }
-    else 
+    else
     {
         noTone(beep);
         mc++;
@@ -169,7 +169,7 @@ bool conectbeep(int port)
         c1=false;
     }
     c++;
-    return end;  
+    return end;
 }
 
 
@@ -224,7 +224,7 @@ bool unmountbeep(int port)
             c1=true;
         }
     }
-    else 
+    else
     {
         noTone(beep);
         mc++;
@@ -237,7 +237,7 @@ bool unmountbeep(int port)
         c1=false;
     }
     c++;
-    return end;  
+    return end;
 }
 bool errorbeep()
 {
@@ -256,7 +256,7 @@ bool errorbeep()
             c1=true;
         }
     }
-    else 
+    else
     {
         noTone(beep);
         mc++;
@@ -269,7 +269,7 @@ bool errorbeep()
         c1=false;
     }
     c++;
-    return end;  
+    return end;
 }
 bool startbeep()
 {
@@ -289,7 +289,7 @@ bool startbeep()
             c1=true;
         }
     }
-    else 
+    else
     {
         noTone(beep);
         mc++;
@@ -302,7 +302,7 @@ bool startbeep()
         c1=false;
     }
     c++;
-    return end;  
+    return end;
 }
 bool winxpstartbeep()
 {
@@ -337,5 +337,5 @@ bool winxpstartbeep()
         c1=false;
     }
     c++;
-    return end;  
+    return end;
 }

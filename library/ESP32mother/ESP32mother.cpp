@@ -577,9 +577,11 @@ void ESPinit()
     /*Motor Initialize*/
     motorsetup();
     /*Encoder Initialize*/
+    #if (MOTORMODE ==PID_)
     ((ESPMotor*)md[0])->Reset();
     ((ESPMotor*)md[1])->Reset();
     xTaskCreatePinnedToCore(enctask,"Encoder task",1024,NULL,2,NULL,0);
+    #endif
 
     /*Wifi Initialize*/
     #if (ESP_MODE != ESP_PS3)

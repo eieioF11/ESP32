@@ -9,6 +9,9 @@
 extern "C" {
 #endif
 
+#define PID_ 0
+#define DUTY 1
+
 class ESPMotor:public MD
 {
     private:
@@ -16,9 +19,11 @@ class ESPMotor:public MD
         PID *pidmd;
         Encoder *e;
         TB6612FNG *t;
+        uint8_t mode;
     public:
         float Kp,Ki,Kd;
         ESPMotor(int pin1_,int pin2_,gpio_num_t sp,int A,int B,int resolution_,pcnt_unit_t pcnt_,float dt);
+        ESPMotor(int pin1_,int pin2_,gpio_num_t sp);
         void set();
         void Move(float val);
         void Update();

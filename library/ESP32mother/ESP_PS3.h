@@ -25,8 +25,6 @@ extern "C" {
 
 #if (ESP_MODE == ESP_PS3)
 #include "Ps3Controller.h"
-#define MAC_ADD (char*)"24:0a:c4:0f:c3:aa"
-
 typedef enum
 {
   lX,
