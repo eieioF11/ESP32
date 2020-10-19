@@ -13,6 +13,7 @@ TB6612FNG& TB6612FNG::operator = (float speed){
 void TB6612FNG::move(float speed)
 {
     digitalWrite(STBY, HIGH);
+    speed = (abs(speed)>1.00)?1.00*(speed/abs(speed)):speed;
     if(speed>0)
     {
         digitalWrite(pin1, LOW);

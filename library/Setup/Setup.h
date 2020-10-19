@@ -6,24 +6,25 @@
 //User Settings------------------------------------
 #define ESP_MODE        ESP_NONE         //ESP_PS3:PS3 ESP_BTS: BluetoothSerial, ESP_NONE: NONE
 #define ESP_OTA         ON               //Enable OTA(ON/OFF)
-#define ESP_SSID        "ESP32ROBO"      //set SSID for OTA
-#define ESP_WIFIPASS    "roborobo"       //set password for wifi
+#define ESP_SSID        "ESP32ROBO"      //Set SSID for OTA
+#define ESP_WIFIPASS    "roborobo"       //Set password for wifi
 #define LocalPort       10000            //local host
-#define ESP_BTSNAME     "ESP32ROBO"      //set name for BTS
-#define MOTORMODE       DUTY            //set motor mode(PID_/DUTY)
-#define SD              ON              //SD card activation
-#define ROS             OFF             //Enable ROS
-#define ROSdatasize     5               //ROS transmission data size [byte]
-#define Delta_T         0.02            //Execution interval[s]
-#define d_interval      0.1             //debug interval[s]
-#define sensor_interval 0.01            //Sensor update interval[s]
-#define LOG_interval    0.05            //State recording interval[s]
-#define LOGNUM          50              //Number of recordings
-const IPAddress ip(192,168,30,4);       //Robot ip
-const IPAddress subnet(255,255,255,0);  //sub-net mask
-const IPAddress ip2(192, 168, 30, 5);   //Controller ip
-const IPAddress gateway(192,168, 30, 1);//gateway settings
-const IPAddress DNS(192, 168, 30, 90);  //DNS settings
+#define ESP_BTSNAME     "ESP32ROBO"      //Set name for BTS
+#define MOTORMODE       DUTY             //Set motor mode(PID_/DUTY)
+#define DEFAULTTASK     ON               //Set up a task for testing(test,wificontroller or PS3controller)
+#define SD              ON               //SD card activation
+#define ROS             OFF              //Enable ROS
+#define ROSdatasize     5                //ROS transmission data size [byte]
+#define Delta_T         0.02             //Execution interval[s]
+#define d_interval      0.1              //debug interval[s]
+#define sensor_interval 0.01             //Sensor update interval[s]
+#define LOG_interval    0.05             //State recording interval[s]
+#define LOGNUM          50               //Number of recordings
+const IPAddress ip(192,168,30,4);        //Robot ip
+const IPAddress subnet(255,255,255,0);   //sub-net mask
+const IPAddress ip2(192, 168, 30, 5);    //Controller ip
+const IPAddress gateway(192,168, 30, 1); //Gateway settings
+const IPAddress DNS(192, 168, 30, 90);   //DNS settings
 #define MAC_ADD (char*)"24:0a:c4:0f:c3:aa"//PS3controller MAC Address
 //-------------------------------------------------
 

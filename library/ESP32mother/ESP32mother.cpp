@@ -441,7 +441,11 @@ void test()
     static float vx=0,angle=0;
     if(debug_t)
     {
+        #if (MOTORMODE ==PID_)
         ESP_SERIAL.printf("/md%d/vx/%.2f/%.2f/m1(Kp=%f,Ki=%f,Kd=%f)rpm=%7.3f/m2(Kp=%f,Ki=%f,Kd=%f)rpm=%7.3f/\n\r",mdc,vx,angle,((ESPMotor*)md[0])->Kp,((ESPMotor*)md[0])->Ki,((ESPMotor*)md[0])->Kd,md[0]->now_val,((ESPMotor*)md[1])->Kp,((ESPMotor*)md[1])->Ki,((ESPMotor*)md[1])->Kd,md[1]->now_val);
+        #else
+        ESP_SERIAL.printf("/MD Vx %.2f,Angular %.2f/\n\r",vx,angle);
+        #endif
     }
     if(EMS)
         return;
@@ -452,6 +456,7 @@ void test()
         case 'a':angle+=0.1;break;
         case 'd':angle-=0.1;break;
         case 'S':vx=angle=0;wheel->Stop();break;
+        #if (MOTORMODE ==PID_)
         case 'm':mdc++;break;
         case 'P':mode='P';break;
         case 'I':mode='I';break;
@@ -459,7 +464,9 @@ void test()
         case 'g':((ESPMotor*)md[0])->set();((ESPMotor*)md[1])->set();break;
         case ' ':setgein();break;
         case 'q':mode=0;break;
+        #endif
     }
+    #if (MOTORMODE ==PID_)
     if(mdc==2)mdc=0;
     switch(mode)
     {
@@ -476,6 +483,7 @@ void test()
             if(serialdata==',')((ESPMotor*)md[mdc])->Kd-=0.000001;
             break;
     }
+    #endif
     wheel->Move(vx,0,angle);
 }
 #if (ESP_MODE != ESP_PS3)
@@ -627,11 +635,19 @@ void ESPinit()
     /*melody*/
     xTaskCreatePinnedToCore(melodytask,"Melody task",1024,NULL,0,NULL,1);
     /*task setup*/
+    #if(DEFAULTTASK == ON)
+
+    #if (MOTORMODE == PID_)
     run.setfunction("gainsetup",test);
+    #else
+    run.setfunction("Motor Test",test);
+    #endif
     #if (ESP_MODE != ESP_PS3)
     run.setfunction("wificontroller",wificon);
     #else
     run.setfunction("ps3controller",ps3task);
+    #endif
+
     #endif
 
     /*end*/

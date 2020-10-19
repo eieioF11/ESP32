@@ -19,7 +19,7 @@ void motorsetup()
     md[1] = new ESPMotor(m2o1,m2o2,m2pwm,enc2a,enc2b,resolution,PCNT_UNIT_1,Delta_T);
     #else
     md[0] = new ESPMotor(m1o1,m1o2,m1pwm);
-    md[1] = new ESPMotor(m1o1,m1o2,m1pwm);
+    md[1] = new ESPMotor(m2o1,m2o2,m2pwm);
     #endif
     wheel = new Two_wheels(md);
     wheel->Stop();
