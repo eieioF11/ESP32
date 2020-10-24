@@ -138,7 +138,7 @@ void PS3Update()
         if(player > 10) player = 0;
     }
 }
-bool PS3Controller(float *Vx,float *Vy,float *Angular)
+bool PS3Controller(float *Vx,float *Vy,float *Angular,bool stick)
 {
     bool b=false;
     PS3Debug="";
@@ -164,12 +164,14 @@ bool PS3Controller(float *Vx,float *Vy,float *Angular)
             case 0b0000000000000001:St.addprintf(&PS3Debug,"square\n");break;
         }
     }
-    if(!PS3button)
+    if(!PS3button&&stick)
     {
         *Vx = float(lx)/128.0f;
         *Vy = (float(ly)/128.0f)*-1.f;
         *Angular=float(rx)/128.0f;
     }
+    else if(!PS3button)
+        *Vx=*Vy=*Angular=0.0f;
     if(b)
     {
         lx=ly=rx=ry=0;

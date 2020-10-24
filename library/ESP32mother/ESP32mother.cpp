@@ -26,6 +26,7 @@ i2c_err_t I2C_Error;
 uint16_t stledinterval=500;
 
 bool EMS=false;
+bool LOWV=false;
 
 String sdprint="/";
 
@@ -38,7 +39,7 @@ inline const char* Systemstatus()
         case XPStartBeep:
         case StartBeep:return "Start";
     }
-    if(Vmonitor()<4.50f&&!EMS)
+    if(LOWV&&!EMS)
     {
         return "Low battery voltage";
     }
@@ -166,7 +167,7 @@ void melodytask(void *arg)
 }
 
 /*I2CTask*/
-
+#if(I2CPORT == ON)
 fptr_vv_t ESPtask_i2c_init = NULL;
 fptr_vv_t ESPtask_i2c_while = [](){};
 
@@ -185,14 +186,22 @@ void ESPtask_i2c(void *arg)
             ESPtask_i2c_while();
     }
 }
+#endif
 
 /*Other*/
 
 void ESPUpdate()
 {
     /*Variable declaration*/
+    static bool mflag=false;
     bool sel=false;
     EMS=Emergency_Stop();
+    if((LOWV=LowV())==true)
+    {
+        if(!mflag)
+            melodysel==UnmountBeep;
+        mflag=true;
+    }
     /*OTA*/
     #if (ESP_OTAE == 1)
     ArduinoOTA.handle();
@@ -208,7 +217,7 @@ void ESPUpdate()
         debug_t=pdt.stand_by(d_interval);
         if(debug_t)
         {
-            ESP_SERIAL.printf("/%s/%s/%.2f[℃]/%.2f[V],EM %d/",run.status(),i2cerror(I2C_Error),CPUTemp(),Vmonitor(),EMS);
+            ESP_SERIAL.printf("/%s/%s/%.2f[℃]/%.2f[V],LOWV %d,EM %d/",run.status(),i2cerror(I2C_Error),CPUTemp(),Vmonitor(),LOWV,EMS);
             ESP_SERIAL.print(sdprint);
             sdprint="/";
         }
@@ -306,7 +315,7 @@ void ESPUpdate()
     PS3Update();
     if(PS3Conect()&&!ps3con)
     {
-        tasksel=1;
+        //tasksel=1;
         melodysel=ConectBeep;
         ps3con=true;
     }
@@ -552,12 +561,14 @@ void ps3task()
         SerialMonitor = true;
         StartFlag=false;
     }
-    bool b=PS3Controller(&Vx,&Vy,&Angular);
     if(debug_t)
     {
         ESP_SERIAL.printf("%f/%f/%f/lx=%d/ly=%d/rx=%d/ry=%d\n\r",Vx,Vy,Angular,PS3stick(lX),PS3stick(lY),PS3stick(rX),PS3stick(rY));
         ESP_SERIAL.print(PS3Debug);
     }
+    if(EMS)
+        return;
+    bool b=PS3Controller(&Vx,&Vy,&Angular);
     if(b||(l1.swread(sw1)&&l1.swread(sw2)&&Vy>0))wheel->Stop();
     else wheel->Move(Vy,Vx,Angular+Vx);
 }
@@ -618,7 +629,9 @@ void ESPinit()
     #endif
 
     /*I2CTask Initialize*/
+    #if(I2CPORT == ON)
     xTaskCreatePinnedToCore(ESPtask_i2c,"I2C task",8096,NULL,3,NULL,0);
+    #endif
 
     /*Odmetry update Task Initialize*/
     xTaskCreatePinnedToCore(Odmetryupdate,"Odmetry task",8096,NULL,0,NULL,1);
@@ -649,7 +662,7 @@ void ESPinit()
     #endif
 
     #endif
-
+    tasksel=STARTTASK;
     /*end*/
     otastatus=" ";
     StartFlag=true;

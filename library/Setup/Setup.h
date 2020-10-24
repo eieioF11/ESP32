@@ -4,7 +4,7 @@
 #include <Arduino.h>
 
 //User Settings------------------------------------
-#define ESP_MODE        ESP_NONE         //ESP_PS3:PS3 ESP_BTS: BluetoothSerial, ESP_NONE: NONE
+#define ESP_MODE        ESP_PS3          //ESP_PS3:PS3 ESP_BTS: BluetoothSerial, ESP_NONE: NONE
 #define ESP_OTA         ON               //Enable OTA(ON/OFF)
 #define ESP_SSID        "ESP32ROBO"      //Set SSID for OTA
 #define ESP_WIFIPASS    "roborobo"       //Set password for wifi
@@ -12,6 +12,8 @@
 #define ESP_BTSNAME     "ESP32ROBO"      //Set name for BTS
 #define MOTORMODE       DUTY             //Set motor mode(PID_/DUTY)
 #define DEFAULTTASK     ON               //Set up a task for testing(test,wificontroller or PS3controller)
+#define STARTTASK       2                //0 setuptask,1 contorollertask
+#define I2CPORT         OFF              //using i2c port
 #define SD              ON               //SD card activation
 #define ROS             OFF              //Enable ROS
 #define ROSdatasize     5                //ROS transmission data size [byte]
@@ -68,7 +70,7 @@ const IPAddress DNS(192, 168, 30, 90);   //DNS settings
 #define ESP_PS3 2
 
 #if (ESP_MODE == ESP_PS3)
-#define ESP_OTAE　0
+#define ESP_OTAE 0
 #else
 #define ESP_OTAE ESP_OTA
 #endif

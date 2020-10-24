@@ -64,10 +64,16 @@ inline float Vmonitor()
   float MPV=ADCinV*((R1+R2)/R2)+(VM_RANGE*em);
   return MPV;
 }
+inline bool LowV()
+{
+  if(Vmonitor()<=4.7f&&Vmonitor()>=3.0)
+    return true;
+  return false;
+}
 
 inline bool Emergency_Stop()
 {
-  if(Vmonitor()<=0.f)
+  if(Vmonitor()<=3.0f)
     return true;
   else
     return false;
