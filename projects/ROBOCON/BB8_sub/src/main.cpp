@@ -20,6 +20,61 @@ kybode comand
 Servo s[4];
 Timer st[4], Dt;
 
+class ServoSpeed
+{
+	private:
+		Servo s;
+		Timer st;
+		int speed;
+		int target;
+		int angle;
+		int nowdeg;
+		int step;
+		bool flag;
+		int max,min;
+	public:
+		ServoSpeed();
+		void begin(int pin,int min,int max);
+		bool set(int angle,int speed);
+		int nowangle();
+		void update();
+};
+ServoSpeed::ServoSpeed(){}
+void ServoSpeed::begin(int pin,int min,int max)
+{
+	speed = 100;
+	this->min=min;
+	this->max=max;
+	angle = min;
+	target = min;
+	step = 1;
+	flag = true;
+	s.setPeriodHertz(50);
+	s.attach(pin);
+}
+bool ServoSpeed::set(int angle,int speed)
+{
+	if(flag)
+	{
+		target=angle;
+		step=(target - angle) / abs(angle - target);
+		flag=false;
+	}
+}
+int ServoSpeed::nowangle()
+{
+	return nowdeg;
+}
+void ServoSpeed::update()
+{
+	nowdeg = (angle - MIN_PULSE) / Step;
+	if (st.stand_by(1.f / (float)speed) && !flag)
+		angle += step;
+	if (angle == target||angle>=max||angle<=min)
+		flag = true;
+	s.writeMicroseconds(angle);
+}
+
 volatile int angle[4];
 volatile int target[4];
 volatile int Speed[4];
@@ -58,30 +113,11 @@ void Servotest();
 void setup()
 {
 	odm.setup(TWOWHEEL);
-	ESPtask_i2c_init = []() {
-		mpu.setup();
-		lider.setup();
-	}; //i2cを使用するものの初期化
-	ESPtask_i2c_while = []() {
-		static int ct = 0;
-		switch (ct)
-		{
-		case 0:
-			lider.update();
-			break;
-		case 1:
-			I2C_Error = (i2c_err_t)l1.com();
-			mpu.update();
-			ct = -1;
-			break;
-		}
-		ct++;
-	};		   //i2cを使用するものをsensor_interval[ms]ごとに実行
 	ESPinit(); //ESP32mother Initialize
+	Servobegin();
 	/*task setup*/
 	run.setfunction("ROBOCON MAIN task", MAIN);
 	run.setfunction("Servo task", Servotest);
-	Servobegin();
 	Start_();
 }
 
@@ -90,6 +126,7 @@ void loop()
 	ESPUpdate();
 }
 
+uint8_t ST[4];
 void MAIN()
 {
 	if (StartFlag)
@@ -98,12 +135,24 @@ void MAIN()
 		SerialMonitor = true;
 		StartFlag = false;
 	}
+	ST[0] = (PS3stick(lX)>0)?128-PS3stick(lX):255-PS3stick(lX)+128;
+	ST[1] = (PS3stick(lY)>0)?128-PS3stick(lY):255-PS3stick(lY)+128;
+	ST[2] = (PS3stick(rX)>0)?128-PS3stick(rX):255-PS3stick(rX)+128;
+	ST[3] = (PS3stick(rY)*-1>0)?128-PS3stick(rY)*-1:255-PS3stick(rY)*-1+128;
 	if (debug_t)
 	{
-		ESP_SERIAL.printf("Main\n\r");
+		ESP_SERIAL.printf("%f/%f/%f/lx=%d/ly=%d/rx=%d/ry=%d\n\r",Vx,Vy,Angular,ST[0],ST[1],ST[2],ST[3]);
+		ESP_SERIAL.print(PS3Debug);
 	}
 	if (EMARGENCYSTOP())
 		return;
+	PS3Controller(&Vx,&Vy,&Angular,false);
+	for(int i=0;i<4;i++)
+	{
+		angle[i]=map(ST[i],0,255,MIN_PULSE,MAX_PULSE);
+		s[i].writeMicroseconds(angle[i]);
+	}
+    wheel->Move(Vy,Vx,Angular+Vx);
 }
 void Servotest()
 {
@@ -115,7 +164,9 @@ void Servotest()
 	}
 	if (debug_t)
 	{
-		ESP_SERIAL.printf("Main\n\r");
+		for(int i=0;i<8;i++)
+			ESP_SERIAL.printf("(%d,%d,%d)",angle[i],target[i],STEP[i]);
+		ESP_SERIAL.printf("\n\r");
 	}
 	if (EMARGENCYSTOP())
 		return;
@@ -125,9 +176,9 @@ void Servotest()
 		for (int i = 0; i < 4; i++)
 		{
 			Speed[0] = 100;
-			Speed[1] = 10000;
-			Speed[2] = 50;
-			Speed[3] = 70;
+			Speed[1] = 100;
+			Speed[2] = 100;
+			Speed[3] = 100;
 			if (END[i])
 			{
 				nowdeg = (angle[i] - MIN_PULSE) / Step;
