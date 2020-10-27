@@ -15,10 +15,8 @@ kybode comand
 
 #define MIN_PULSE 900
 #define MAX_PULSE 2100
-#define Step (MAX_PULSE - MIN_PULSE) / 120
-
-Servo s[4];
-Timer st[4], Dt;
+#define MAX_ANGLE 120
+#define Step (MAX_PULSE - MIN_PULSE) / MAX_ANGLE
 
 class ServoSpeed
 {
@@ -32,10 +30,13 @@ class ServoSpeed
 		int step;
 		bool flag;
 		int max,min;
+		bool stop;
+		bool start;
 	public:
 		ServoSpeed();
 		void begin(int pin,int min,int max);
 		bool set(int angle,int speed);
+		void setMs(int val);
 		int nowangle();
 		void update();
 };
@@ -48,22 +49,40 @@ void ServoSpeed::begin(int pin,int min,int max)
 	angle = min;
 	target = min;
 	step = 1;
-	flag = true;
+	flag = false;
+	start = true;
 	s.setPeriodHertz(50);
 	s.attach(pin);
 }
 bool ServoSpeed::set(int angle,int speed)
 {
-	if(flag)
+	if(this->start)
 	{
-		target=angle;
-		step=(target - angle) / abs(angle - target);
-		flag=false;
+		this->target=map(angle,0,MAX_ANGLE,this->min,this->max);
+		int S=abs(this->angle - this->target);
+		if(S!=0)
+			this->step=(this->target - this->angle) / S;
+		this->speed=speed;
+		this->flag=false;
+		this->start=false;
+		this->stop=false;
 	}
+	if(this->flag)
+	{
+		this->start=true;
+		this->flag=false;
+		return true;
+	}
+	return false;
+}
+void ServoSpeed::setMs(int val)
+{
+	this->stop=true;
+	s.writeMicroseconds(val);
 }
 int ServoSpeed::nowangle()
 {
-	return nowdeg;
+	return this->nowdeg;
 }
 void ServoSpeed::update()
 {
@@ -72,38 +91,40 @@ void ServoSpeed::update()
 		angle += step;
 	if (angle == target||angle>=max||angle<=min)
 		flag = true;
-	s.writeMicroseconds(angle);
+	if(!stop)
+		s.writeMicroseconds(angle);
 }
 
 volatile int angle[4];
+const int anglemap[2][4]=
+	{
+		{0,90,0,0},
+		{90,0,0,0},
+	};
+
+/*
 volatile int target[4];
 volatile int Speed[4];
 volatile int8_t STEP[4];
 volatile bool END[4];
+*/
+ServoSpeed s[4];
+//Servo s[4];
+Timer st[4], Dt;
 const int servopin[4] = {enc1a, enc1b, enc2a, enc2b};
 
 void Servobegin()
 {
 	for (int i = 0; i < 4; i++)
 	{
-		Speed[i] = 100;
-		angle[i] = MIN_PULSE;
-		target[i] = MIN_PULSE;
-		STEP[i] = 1;
-		END[i] = false;
-		s[i].setPeriodHertz(50);
-		s[i].attach(servopin[i]);
+		s[i].begin(servopin[i],MIN_PULSE,MAX_PULSE);
 	}
 }
 void Servomove()
 {
 	for (int i = 0; i < 4; i++)
 	{
-		if (st[i].stand_by(1.f / (float)Speed[i]) && !END[i])
-			angle[i] += STEP[i];
-		if (angle[i] == target[i])
-			END[i] = true;
-		s[i].writeMicroseconds(angle[i]);
+		s[i].update();
 	}
 }
 
@@ -150,10 +171,13 @@ void MAIN()
 	for(int i=0;i<4;i++)
 	{
 		angle[i]=map(ST[i],0,255,MIN_PULSE,MAX_PULSE);
-		s[i].writeMicroseconds(angle[i]);
+		//s[i].writeMicroseconds(angle[i]);
+		s[i].setMs(angle[i]);
 	}
     wheel->Move(Vy,Vx,Angular+Vx);
 }
+
+uint8_t count;
 void Servotest()
 {
 	if (StartFlag)
@@ -164,8 +188,8 @@ void Servotest()
 	}
 	if (debug_t)
 	{
-		for(int i=0;i<8;i++)
-			ESP_SERIAL.printf("(%d,%d,%d)",angle[i],target[i],STEP[i]);
+		for(int i=0;i<4;i++)
+			ESP_SERIAL.printf("%d,%d",angle[i],s[i].nowangle());
 		ESP_SERIAL.printf("\n\r");
 	}
 	if (EMARGENCYSTOP())
@@ -175,19 +199,10 @@ void Servotest()
 		int nowdeg = 0;
 		for (int i = 0; i < 4; i++)
 		{
-			Speed[0] = 100;
-			Speed[1] = 100;
-			Speed[2] = 100;
-			Speed[3] = 100;
-			if (END[i])
+			if(s[i].set(anglemap[count][i],1000))
 			{
-				nowdeg = (angle[i] - MIN_PULSE) / Step;
-				if (i != 1)
-					target[i] = (MIN_PULSE + (Step * 110) != target[i]) ? MIN_PULSE + (Step * 110) : MIN_PULSE;
-				else
-					target[i] = (MIN_PULSE + (Step * 30) != target[i]) ? MIN_PULSE + (Step * 30) : MIN_PULSE;
-				STEP[i] = (target[i] - angle[i]) / abs(angle[i] - target[i]);
-				END[i] = false;
+				count=(count>2)?0:count+1;
+				ESP_SERIAL.printf("END\n\r");
 			}
 		}
 	}
