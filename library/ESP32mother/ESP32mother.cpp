@@ -11,6 +11,8 @@ WiFiUDP udp;
 Timer pdt;
 taskrun run;
 
+bool OTAFLAG=false;
+
 float Vx=0.0f;
 float Vy=0.0f;
 float Angular=0.0f;
@@ -596,7 +598,7 @@ void ESPinit()
     /*Motor Initialize*/
     motorsetup();
     /*Encoder Initialize*/
-    #if (MOTORMODE ==PID_)
+    #if (MOTORMODE ==PID_M)
     ((ESPMotor*)md[0])->Reset();
     ((ESPMotor*)md[1])->Reset();
     xTaskCreatePinnedToCore(enctask,"Encoder task",1024,NULL,2,NULL,0);
@@ -650,7 +652,7 @@ void ESPinit()
     /*task setup*/
     #if(DEFAULTTASK == ON)
 
-    #if (MOTORMODE == PID_)
+    #if (MOTORMODE == PID_M)
     run.setfunction("gainsetup",test);
     #else
     run.setfunction("Motor Test",test);

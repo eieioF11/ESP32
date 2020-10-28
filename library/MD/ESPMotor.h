@@ -9,8 +9,8 @@
 extern "C" {
 #endif
 
-#define PID_ 0
-#define DUTY 1
+#define PID_M 0
+#define DUTY_M 1
 
 class ESPMotor:public MD
 {

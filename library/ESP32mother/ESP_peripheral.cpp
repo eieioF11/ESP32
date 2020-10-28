@@ -14,7 +14,7 @@ MoveBase *wheel;
 
 void motorsetup()
 {
-    #if (MOTORMODE ==PID_)
+    #if (MOTORMODE ==PID_M)
     md[0] = new ESPMotor(m1o1,m1o2,m1pwm,enc1a,enc1b,resolution,PCNT_UNIT_0,Delta_T);
     md[1] = new ESPMotor(m2o1,m2o2,m2pwm,enc2a,enc2b,resolution,PCNT_UNIT_1,Delta_T);
     #else

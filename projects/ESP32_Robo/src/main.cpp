@@ -108,8 +108,6 @@ void angletest()
 {
 	bool reset = false;
 #if (ESP_MODE == ESP_PS3)
-	bool reset = false;
-
 	//Angular=acorr.Output(reset);
 	bool b = PS3Controller(&Vx, &Vy, &Angular);
 	if (b || (l1.swread(sw1) && l1.swread(sw2) && Vy > 0))
