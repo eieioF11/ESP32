@@ -40,51 +40,50 @@ void Servo(void *arg)
     portTickType lt = xTaskGetTickCount();
     while(1)
     {
-		if(!EMARGENCYSTOP())
+		if(!ESP32M.EMARGENCYSTOP())
             Servomove();
 		vTaskDelayUntil(&lt, 1/portTICK_RATE_MS);
     }
 }
 
-void MAIN();
-void Servotest();
+void MAIN(Flag_t *flag);
+void Servotest(Flag_t *flag);
 
 void setup()
 {
 	odm.setup(TWOWHEEL);
 	ESPinit(); //ESP32mother Initialize
 	Servobegin();
-	/*task setup*/
-	run.setfunction("ROBOCON MAIN task", MAIN);
-	run.setfunction("Servo task", Servotest);
-	Start_();
+	/*User task setup*/
+	ESP32M.setfunction("ROBOCON MAIN task", MAIN);
+	ESP32M.setfunction("Servo task", Servotest);
 	xTaskCreatePinnedToCore(Servo,"servo task",1024,NULL,2,NULL,0);
 }
 
 void loop()
 {
-	ESPUpdate();
+	ESP32M.update();
 }
 
 uint8_t ST[4];
-void MAIN()
+void MAIN(Flag_t *flag)
 {
-	if (StartFlag)
-	{
-		MELODY = true;
-		SerialMonitor = true;
-		StartFlag = false;
-	}
+    if(flag->Start)
+    {
+        flag->Melody = true;
+        flag->SerialMonitor = true;
+        flag->Start=false;
+    }
 	ST[0] = (PS3stick(lX)>0)?128-PS3stick(lX):255-PS3stick(lX)+128;
 	ST[1] = (PS3stick(lY)>0)?128-PS3stick(lY):255-PS3stick(lY)+128;
 	ST[2] = (PS3stick(rX)>0)?128-PS3stick(rX):255-PS3stick(rX)+128;
 	ST[3] = (PS3stick(rY)*-1>0)?128-PS3stick(rY)*-1:255-PS3stick(rY)*-1+128;
-	if (debug_t)
+	if (flag->Debug)
 	{
 		ESP_SERIAL.printf("%f/%f/%f/lx=%d/ly=%d/rx=%d/ry=%d\n\r",Vx,Vy,Angular,ST[0],ST[1],ST[2],ST[3]);
 		ESP_SERIAL.print(PS3Debug);
 	}
-	if (EMARGENCYSTOP())
+	if (ESP32M.EMARGENCYSTOP())
 		return;
 	PS3Controller(&Vx,&Vy,&Angular,false);
 	for(int i=0;i<4;i++)
@@ -97,21 +96,21 @@ void MAIN()
 }
 
 uint8_t count[4];
-void Servotest()
+void Servotest(Flag_t *flag)
 {
-	if (StartFlag)
-	{
-		MELODY = true;
-		SerialMonitor = true;
-		StartFlag = false;
-	}
-	if (debug_t)
+    if(flag->Start)
+    {
+        flag->Melody = true;
+        flag->SerialMonitor = true;
+        flag->Start=false;
+    }
+	if (flag->Debug)
 	{
 		for(int i=0;i<4;i++)
 			ESP_SERIAL.printf("/%f,%d,%d/",s[i].nowangle(),s[i].nowMs(),count[i]);
 		ESP_SERIAL.printf("\n\r");
 	}
-	if (EMARGENCYSTOP())
+	if (ESP32M.EMARGENCYSTOP())
 		return;
 	for (int i = 0; i < 4; i++)
 	{

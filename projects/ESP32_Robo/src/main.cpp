@@ -15,11 +15,11 @@ kybode comand
 #include "Trapezoid.h"
 //#include "Web.h"
 
-void Linetrace();
-void angletest();
-void movetest();
-void Lidertest();
-//void Webtest();
+void Linetrace(Flag_t *flag);
+void angletest(Flag_t *flag);
+void movetest(Flag_t *flag);
+void Lidertest(Flag_t *flag);
+//void Webtest(Flag_t *flag);
 
 Angle_correction acorrX(-0.035, -0.0005, -0.01, -1.0, 1.0, Delta_T);
 Angle_correction acorrY(-0.035, -0.005, -0.01, -1.0, 1.0, Delta_T);
@@ -52,34 +52,33 @@ void setup()
 	ESPinit(); //ESP32mother Initialize
 	//WebSetup();
 	/*task setup*/
-	run.setfunction("Linetrace", Linetrace);
-	run.setfunction("angletest", angletest);
-	run.setfunction("movetest", movetest);
-	run.setfunction("lidertest", Lidertest);
-	//run.setfunction("Webtest", Webtest);
+	ESP32M.setfunction("Linetrace", Linetrace);
+	ESP32M.setfunction("angletest", angletest);
+	ESP32M.setfunction("movetest", movetest);
+	ESP32M.setfunction("lidertest", Lidertest);
+	//ESP32M.setfunction("Webtest", Webtest);
 
 	acorrX.setup(0);
 	acorrY.setup(0);
 	acorrZ.setup(0);
-	//Start_();
 }
 
 void loop()
 {
-	ESPUpdate();
+	ESP32M.update();
 }
 
 PID ml(-0.019, -0.0, -0.0000001, 0.2, 0.6, Delta_T);
 PID mr(-0.019, -0.0, -0.0000001, 0.2, 0.6, Delta_T);
 PID ml2(-0.055, 0, 0, -0.25, 0.6, Delta_T);
 PID mr2(-0.055, 0, 0, -0.25, 0.6, Delta_T);
-void Linetrace() //23~70
+void Linetrace(Flag_t *flag) //23~70
 {
-    if(StartFlag)
+    if(flag->Start)
     {
-        MELODY = true;
-        SerialMonitor = true;
-        StartFlag=false;
+        flag->Melody = true;
+        flag->SerialMonitor = true;
+        flag->Start=false;
     }
 	const float lv = 38.0;
 	const float lv2 = 50.0;
@@ -88,11 +87,11 @@ void Linetrace() //23~70
 	float rmp = mr.output(lv, l1.read(1));
 	float lm2p = ml2.output(lv2, l1.read(4));
 	float rm2p = mr2.output(lv2, l1.read(0));
-	if (debug_t)
+	if (flag->Debug)
 	{
 		ESP_SERIAL.printf("%.2f,%.2f,%.2f,%.2f/l %.2f/r %.2f(/%d/%d/%d/%d/%d/sw%d%d\n\r", lmp, rmp, lm2p, rm2p, lmp + lm2p, rmp + rm2p, l1.read(4), l1.read(3), l1.read(2), l1.read(1), l1.read(0), l1.swread(sw1), l1.swread(sw2));
 	}
-	if (EMARGENCYSTOP())
+	if (ESP32M.EMARGENCYSTOP())
 		return;
 	if (l1.swread(sw1) || l1.swread(sw2))
 		wheel->Stop();
@@ -104,40 +103,16 @@ void Linetrace() //23~70
 }
 
 Timer t[1];
-void angletest()
+void angletest(Flag_t *flag)
 {
 	bool reset = false;
-#if (ESP_MODE == ESP_PS3)
-	//Angular=acorr.Output(reset);
-	bool b = PS3Controller(&Vx, &Vy, &Angular);
-	if (b || (l1.swread(sw1) && l1.swread(sw2) && Vy > 0))
-		wheel->Stop();
-	else
-		wheel->Move(Vy, Vx, Angular);
-	switch (serialdata)
-	{
-	case 'r':
-		reset = true;
-		break;
-	}
-	if (reset)
-	{
-		odm.reset();
-	}
-	if (debug_t)
-	{
-		ESP_SERIAL.printf("rps1=%5.3f,rps2=%5.3f,pitch=%5.2f/roll=%5.2f/yaw=%5.2f//(x=%5.2f,y=%5.2f,angle=%5.2f)/%5.2f\n\r", md[0]->now_val, md[1]->now_val, odm.pitch(), odm.roll(), odm.yaw(), odm.x(), odm.y(), odm.wyaw(), odm.V());
-		//ESP_SERIAL.printf("sp=%f/angler=%f/",sp,angler);
-		//mpu.print();
-	}
-#else
-    if(StartFlag)
+    if(flag->Start)
     {
-        MELODY = true;
-        SerialMonitor = true;
-        StartFlag=false;
+        flag->Melody = true;
+        flag->SerialMonitor = true;
+        flag->Start=false;
     }
-	switch (serialdata)
+	switch (flag->SerialData)
 	{
 	case 'r':
 		reset = true;
@@ -146,15 +121,15 @@ void angletest()
 	if (!mount())
 	{
 		reset = true;
-		Start();
+		ESP32M.Start();
 	}
-	if (debug_t)
+	if (flag->Debug)
 	{
 		//ESP_SERIAL.printf("rps1=%5.3f,rps2=%5.3f,pitch=%5.2f/roll=%5.2f/yaw=%5.2f//(x=%5.2f,y=%5.2f,angle=%5.2f)/%5.3f/%5.3f,%5.3f,%5.3f,reset%d,Gz %f\n\r", md[0]->now_val, md[1]->now_val, odm.pitch(), odm.roll(), odm.yaw(), odm.x(), odm.y(), odm.wyaw(), odm.V(), Vx, Vy, Angular, reset, mpu.read(GyroZ));
 		ESP_SERIAL.printf("/roll=%5.2f/pitch=%5.2f/yaw=%5.2f/%5.2f/%5.2f\n\r",odm.roll(),odm.pitch(),odm.yaw(),odm.wyaw(),Angular);
 		//mpu.print();
 	}
-	if (EMARGENCYSTOP())
+	if (ESP32M.EMARGENCYSTOP())
 		return;
 	//Vx=acorrX.Output(reset,odm.pitch());
 	//Vy = acorrY.Output(reset, odm.roll());
@@ -163,25 +138,24 @@ void angletest()
 		wheel->Stop();
 	else
 		wheel->Move(Vy, Vx, Angular);
-#endif
 }
-void movetest()
+void movetest(Flag_t *flag)
 {
-    if(StartFlag)
+    if(flag->Start)
     {
-        MELODY = true;
-        SerialMonitor = true;
-        StartFlag=false;
+        flag->Melody = true;
+        flag->SerialMonitor = true;
+        flag->Start=false;
     }
 	static bool st = false;
-	if (debug_t)
+	if (flag->Debug)
 	{
 		ESP_SERIAL.print(T.status());
 		ESP_SERIAL.printf("/Vx=%f,Vy=%f,Angler=%f,rpm=%7.3f,rpm=%7.3f/(x=%5.2f,y=%5.2f,angle=%5.2f)\n\r", Vx, Vy, Angular, md[0]->now_val, md[1]->now_val, odm.x(), odm.y(), odm.wyaw());
 	}
-	if (EMARGENCYSTOP())
+	if (ESP32M.EMARGENCYSTOP())
 		return;
-	switch (serialdata)
+	switch (flag->SerialData)
 	{
 	case 's':
 		st = true;
@@ -200,16 +174,16 @@ void movetest()
 
 byte data[14];
 
-void Lidertest()
+void Lidertest(Flag_t *flag)
 {
 	uint16_t dis=(uint16_t)lider.read(Distance);
 	float  angle=lider.read(Angle);
-    if(StartFlag)
+    if(flag->Start)
     {
-        MELODY = true;
-        SerialMonitor = false;
-		Start();
-        StartFlag=false;
+        flag->Melody = true;
+        flag->SerialMonitor = false;
+		ESP32M.Start();
+        flag->Start=false;
     }
 	else
 	{
@@ -220,11 +194,11 @@ void Lidertest()
 		data[3]=Deg&0xff;
 		Serial.write(data,4);
 	}
-	if (debug_t)
+	if (flag->Debug)
 	{
 		ESP_SERIAL.printf("dis=%f,angle=%f\n\r",(float)dis,angle);
 	}
-	if (EMARGENCYSTOP())
+	if (ESP32M.EMARGENCYSTOP())
 		return;
 }
 
@@ -234,7 +208,7 @@ WebObject<int8_t> stX(2);
 WebObject<int8_t> stY(3);
 WebObject<uint8_t> EM(4);
 WebObject<uint8_t> checkbox1(5);
-void Webtest()
+void Webtest(Flag_t *flag)
 {
     if(StartFlag)
     {

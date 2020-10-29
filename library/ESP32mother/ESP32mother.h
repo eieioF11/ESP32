@@ -54,39 +54,48 @@ kybode comand
 extern "C" {
 #endif
 
-extern int serialdata;
-
-#if (ESP_MODE != ESP_PS3)
-extern int udpdata;
-#endif
-
 extern const char*udpmode;
-extern bool debug_t;
-extern bool SerialMonitor;
-extern bool StartFlag;
-extern bool MELODY;
+
 extern i2c_err_t I2C_Error;
 
 extern float Vx;
 extern float Vy;
 extern float Angular;
 
-//使用可能なクラスのオブジェクト
+class ESP32Mather
+{
+    private:
+        taskrun run;
+        Timer pdt;
+        //task number
+        int tasksel=0;
+        //system flag
+        bool EMS=false;
+        bool LOWV=false;
+        bool wificonnect=false;
+    public:
+        ESP32Mather();
+        int setup();
+        void setfunction(const char*name,void (*tfp)(Flag_t *));
+        void update();
+        bool EMARGENCYSTOP();
+        void Error();
+        void Start();
+        void Start_();
+        const char* Systemstatus();
+        const char* Taskstatus();
+        const char* OTAstatus();
+};
+extern ESP32Mather ESP32M;
 
-extern taskrun run;
+//使用可能なクラスのオブジェクト
 
 //I2CとSPIの関数ポインタ
 extern fptr_vv_t ESPtask_i2c_init;
 extern fptr_vv_t ESPtask_i2c_while;
 
-const char* OTAstatus();
+void OTAsetup(); //ESP32M.setup()の内部で実行される
 void ESPinit();  //setup()で１回実行
-void ESPUpdate();
-
-bool EMARGENCYSTOP();
-void Error();
-void Start();
-void Start_();
 
 #if defined __cplusplus
 }

@@ -8,7 +8,7 @@ PID::PID(float Kp_,float Ki_,float Kd_,float Min_,float Max_,float dt_)
   Max=Max_;
   dt=dt_;
   reset();
-  printf("PID initialize!\n\rParameter(Kp=%.3f/Ki=%.3f/Kd=%.3f/Min=%.3f~Max=%.3f/Processing time = %.3f)\n\r",Kp,Ki,Kd,Min,Max,dt);
+  //printf("PID initialize!\n\rParameter(Kp=%.3f/Ki=%.3f/Kd=%.3f/Min=%.3f~Max=%.3f/Processing time = %.3f)\n\r",Kp,Ki,Kd,Min,Max,dt);
 }
 PID::PID(float Min_,float Max_,float dt_)
 {
@@ -34,7 +34,7 @@ void PID::setoutput(float Min,float Max)
 }
 float PID::output(float r,float y)
 {
-    past = deviation; 
+    past = deviation;
     deviation = r - y;                          //偏差
     integral += ((past + deviation)/2)*dt;      //積分
     float differential = (deviation - past)/dt; //微分
@@ -46,6 +46,6 @@ void PID::reset()
 {
   integral=0.0;
   past = 0.0;
-  deviation = 0.0;  
+  deviation = 0.0;
   //printf("PID reset!\n\r");
 }

@@ -6,12 +6,12 @@ void taskrun::Setup()
     Number_of_tasks=1;
     tauto=false;
 }
-void taskrun::setfunction(const char*name,void (*tfp)(void),int tasknum)
+void taskrun::setfunction(const char*name,void (*tfp)(Flag_t *),int tasknum)
 {
     taskname[tasknum-1]=name;
     taskp[tasknum-1]=tfp;
-} 
-void taskrun::setfunction(const char*name,void (*tfp)(void))
+}
+void taskrun::setfunction(const char*name,void (*tfp)(Flag_t *))
 {
     setfunction(name,tfp,Number_of_tasks);
     Number_of_tasks++;
@@ -22,7 +22,7 @@ void taskrun::select(int *statusnum)
     taskstatus=*statusnum;
     if(Number_of_tasks-1>*statusnum)
     {
-        (*taskp[taskstatus])();
+        (*taskp[taskstatus])(&flag);
     }
 }
 const char* taskrun::status()

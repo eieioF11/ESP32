@@ -4,12 +4,9 @@
 
 #if (ESP_MODE != ESP_PS3)
 #define wificonNUM 1
-int udpdata=0;
 WiFiUDP udp;
 #endif
-
-Timer pdt;
-taskrun run;
+ESP32Mather ESP32M;
 
 bool OTAFLAG=false;
 
@@ -17,118 +14,14 @@ float Vx=0.0f;
 float Vy=0.0f;
 float Angular=0.0f;
 
-bool MELODY=true;
-bool SerialMonitor=true;
-bool StartFlag=true;
-int mode,serialdata,mdc=0;
-int sel=0,melodysel=0,tasksel=0;
+int mode,mdc=0;
+int sel=0,melodysel=0;
 const char*udpmode=" ";
-bool debug_t=false;
 i2c_err_t I2C_Error;
 uint16_t stledinterval=500;
 
-bool EMS=false;
-bool LOWV=false;
-
 String sdprint="/";
 
-inline const char* Systemstatus()
-{
-    switch(melodysel)
-    {
-        case ErrorBeep:return "Abnormal";
-        case ConectBeep:return "Wifi Conect";
-        case XPStartBeep:
-        case StartBeep:return "Start";
-    }
-    if(LOWV&&!EMS)
-    {
-        return "Low battery voltage";
-    }
-    return "Normal";
-}
-void Error()
-{
-    melodysel=ErrorBeep;
-}
-void Start()
-{
-    melodysel=StartBeep;
-}
-void Start_()
-{
-    melodysel=XPStartBeep;
-}
-
-bool EMARGENCYSTOP()
-{
-    return EMS;
-}
-
-String otastatus=" ";
-const char* OTAstatus()
-{
-    return otastatus.c_str();
-}
-
-
-#if (ESP_OTAE == 1)
-int otac=0;
-void OTAinit()
-{
-    ArduinoOTA
-    .onStart([]() {
-        String type;
-        if (ArduinoOTA.getCommand() == U_FLASH)
-            type = "sketch";
-        else // U_SPIFFS
-            type = "filesystem";
-        otastatus="Start updating"+ type;
-        // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
-        Serial.println(otastatus);
-        wheel->Stop();
-        digitalWrite(StatusLED, HIGH);
-        digitalWrite(STBY, HIGH);
-        OTAFLAG=true;
-        Start();
-    })
-    .onEnd([]() {
-        digitalWrite(StatusLED, LOW);
-        digitalWrite(STBY, LOW);
-        Serial.println(otastatus);
-        OTAFLAG=false;
-    })
-    .onProgress([](unsigned int progress, unsigned int total) {
-        Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
-        if(otac>10)
-        {
-            digitalWrite(StatusLED, HIGH);
-            digitalWrite(STBY, LOW);
-        }
-        else
-        {
-            digitalWrite(StatusLED, LOW);
-            digitalWrite(STBY, HIGH);
-        }
-        otac++;
-        if(otac>20)otac=0;
-    })
-    .onError([](ota_error_t error) {
-        digitalWrite(StatusLED, HIGH);
-        OTAFLAG=false;
-        char buff[255];
-        sprintf(buff,"Error[%u]: ", error);
-        otastatus+=String(buff)+":";
-        if (error == OTA_AUTH_ERROR) otastatus+="Auth Failed";
-        else if (error == OTA_BEGIN_ERROR) otastatus+="Begin Failed";
-        else if (error == OTA_CONNECT_ERROR) otastatus+="Connect Failed";
-        else if (error == OTA_RECEIVE_ERROR) otastatus+="Receive Failed";
-        else if (error == OTA_END_ERROR) otastatus+="End Failed";
-        Serial.println(otastatus);
-    });
-    ArduinoOTA.begin();
-}
-#endif
 /*beep&melody*/
 
 void melodytask(void *arg)
@@ -190,140 +83,6 @@ void ESPtask_i2c(void *arg)
 }
 #endif
 
-/*Other*/
-
-void ESPUpdate()
-{
-    /*Variable declaration*/
-    static bool mflag=false;
-    bool sel=false;
-    EMS=Emergency_Stop();
-    if((LOWV=LowV())==true)
-    {
-        if(!mflag)
-            melodysel==UnmountBeep;
-        mflag=true;
-    }
-    /*OTA*/
-    #if (ESP_OTAE == 1)
-    ArduinoOTA.handle();
-    #endif
-    if(OTAFLAG)
-        return;
-    /*USBSerial*/
-    serialdata=0;
-    if(Serial.available())serialdata = Serial.read();
-    /*debug*/
-    if(SerialMonitor)
-    {
-        debug_t=pdt.stand_by(d_interval);
-        if(debug_t)
-        {
-            ESP_SERIAL.printf("/%s/%s/%.2f[℃]/%.2f[V],LOWV %d,EM %d/",run.status(),i2cerror(I2C_Error),CPUTemp(),Vmonitor(),LOWV,EMS);
-            ESP_SERIAL.print(sdprint);
-            sdprint="/";
-        }
-    }
-    else
-        debug_t=false;
-    /*wifi udp read*/
-    #if (ESP_MODE != ESP_PS3)
-    if (udp.parsePacket())udpdata=udp.read();
-    if(udpdata==193)sel=true;
-    if(tasksel==wificonNUM)
-    {
-        udp.beginPacket(ip2,LocalPort);
-        udp.write((byte)EMS);
-        udp.endPacket();
-    }
-
-    #endif
-    #if (ESP_MODE == ESP_PS3)
-    if(PS3PSButton())sel=true;
-    #endif
-    /*select task*/
-    STARTSWITCH<=!STSW()+sel;
-    if(serialdata=='!')
-    {
-        tasksel++;
-        #if (ESP_MODE != ESP_PS3)
-        udpdata=48;
-        #endif
-    }
-    switch(STARTSWITCH)
-    {
-        case 1:
-            melodysel=Onbeep;
-            StartFlag=true;
-            tasksel++;
-            #if (ESP_MODE != ESP_PS3)
-            udpdata=48;
-            #endif
-        break;
-        case 2:
-            #if (ESP_MODE != ESP_PS3)
-            melodysel=Onbeep;
-            StartFlag=true;
-            tasksel=wificonNUM;
-            udpdata=48;
-            #endif
-        break;
-        case 3:
-        break;
-        default:
-        break;
-    }
-    /*taskrun*/
-    run.select(&tasksel);
-    if(EMS)
-    {
-        digitalWrite(STBY, LOW);
-    }
-    /*Wifi connection check*/
-    #if (ESP_MODE != ESP_PS3)
-    static bool wificonnect=false;
-    if(WiFi.softAPgetStationNum())
-    {
-        if(wificonnect==false)
-        {
-            melodysel=ConectBeep;
-            wificonnect=true;
-            tasksel=wificonNUM;
-        }
-    }
-    else wificonnect=false;
-    #endif
-    if(MELODY)
-        MOUNT<=!mount();
-    switch(MOUNT)
-    {
-        case 1:
-            melodysel++;
-            melreset();
-        break;
-        case 2:
-
-        break;
-        case 3:
-            #if (SD == ON)
-            melodysel=UnmountBeep;
-            #endif
-        break;
-        default:
-        break;
-    }
-    #if (ESP_MODE == ESP_PS3)
-    static bool ps3con=false;
-    PS3Update();
-    if(PS3Conect()&&!ps3con)
-    {
-        //tasksel=1;
-        melodysel=ConectBeep;
-        ps3con=true;
-    }
-    #endif
-    delay(Delta_T*100);//Execution interval
-}
 /*Gain setting*/
 void setgein()
 {
@@ -426,11 +185,11 @@ void SDlog(void *arg)
                 {
                     sdprint="SDerror/";
                     if(!Erflag)
-                        Error();
+                        ESP32M.Error();
                     stledinterval=50;
                 }
                 else
-                    fprintf(f,"%5ld,%.2f,%.2f,%s,%s,%7.3f,%7.3f,%3d,%3d,%3d,%3d,%3d,%d%d,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%s,%s,%f,%d\n",micros(),CPUTemp(),mpu.read(Temp),udpmode,i2cerror(I2C_Error),md[0]->now_val,md[1]->now_val,l1.read(0),l1.read(1),l1.read(2),l1.read(3),l1.read(4),l1.swread(sw1),l1.swread(sw2),mpu.read(AccX),mpu.read(AccY),mpu.read(AccZ),mpu.read(GyroX),mpu.read(GyroY),mpu.read(GyroZ),mpu.read(MagX),mpu.read(MagY),mpu.read(MagZ),Systemstatus(),run.status(),Vmonitor(),EMS);
+                    fprintf(f,"%5ld,%.2f,%.2f,%s,%s,%7.3f,%7.3f,%3d,%3d,%3d,%3d,%3d,%d%d,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%s,%s,%f,%d\n",micros(),CPUTemp(),mpu.read(Temp),udpmode,i2cerror(I2C_Error),md[0]->now_val,md[1]->now_val,l1.read(0),l1.read(1),l1.read(2),l1.read(3),l1.read(4),l1.swread(sw1),l1.swread(sw2),mpu.read(AccX),mpu.read(AccY),mpu.read(AccZ),mpu.read(GyroX),mpu.read(GyroY),mpu.read(GyroZ),mpu.read(MagX),mpu.read(MagY),mpu.read(MagZ),ESP32M.Systemstatus(),ESP32M.Taskstatus(),Vmonitor(),ESP32M.EMARGENCYSTOP());
                 fclose(f);
             }
             else
@@ -441,16 +200,353 @@ void SDlog(void *arg)
     }
 }
 #endif
-void test()
+
+/*OTA*/
+int otac=0;
+String otastatus;
+void OTAsetup()
 {
-    if(StartFlag)
+    #if (ESP_OTAE == 1)
+    ArduinoOTA
+    .onStart([]() {
+        String type;
+        if (ArduinoOTA.getCommand() == U_FLASH)
+            type = "sketch";
+        else // U_SPIFFS
+            type = "filesystem";
+        otastatus="Start updating"+ type;
+        // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
+        Serial.println(otastatus);
+        wheel->Stop();
+        digitalWrite(StatusLED, HIGH);
+        digitalWrite(STBY, HIGH);
+        OTAFLAG=true;
+        ESP32M.Start();
+    })
+    .onEnd([]() {
+        digitalWrite(StatusLED, LOW);
+        digitalWrite(STBY, LOW);
+        Serial.println(otastatus);
+        OTAFLAG=false;
+    })
+    .onProgress([](unsigned int progress, unsigned int total) {
+        Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+        if(otac>10)
+        {
+            digitalWrite(StatusLED, HIGH);
+            digitalWrite(STBY, LOW);
+        }
+        else
+        {
+            digitalWrite(StatusLED, LOW);
+            digitalWrite(STBY, HIGH);
+        }
+        otac++;
+        if(otac>20)otac=0;
+    })
+    .onError([](ota_error_t error) {
+        digitalWrite(StatusLED, HIGH);
+        OTAFLAG=false;
+        char buff[255];
+        sprintf(buff,"Error[%u]: ", error);
+        otastatus+=String(buff)+":";
+        if (error == OTA_AUTH_ERROR) otastatus+="Auth Failed";
+        else if (error == OTA_BEGIN_ERROR) otastatus+="Begin Failed";
+        else if (error == OTA_CONNECT_ERROR) otastatus+="Connect Failed";
+        else if (error == OTA_RECEIVE_ERROR) otastatus+="Receive Failed";
+        else if (error == OTA_END_ERROR) otastatus+="End Failed";
+        Serial.println(otastatus);
+    });
+    ArduinoOTA.begin();
+    #endif
+}
+
+/*Other*/
+
+ESP32Mather::ESP32Mather()
+{
+}
+int ESP32Mather::setup()
+{
+    /*UART setup*/
+    Serial.begin(115200);
+    /*BTSerial Initialize*/
+    #if (ESP_MODE == ESP_BTS)
+    BTSerial.begin(ESP_BTSNAME);
+    #endif
+    ESP_SERIAL.printf("\n\rESP:Initializing.");
+    /*Digitalpin setup*/
+    pinMode(STBY, OUTPUT);
+    pinMode(SD_CHECK, INPUT);
+    pinMode(SD_MOUNT, INPUT);
+    pinMode(stsw, INPUT_PULLUP);
+    pinMode(StatusLED, OUTPUT);
+    digitalWrite(StatusLED, HIGH);
+    digitalWrite(STBY, LOW);
+    Vmonitor_setup();
+    ESP_SERIAL.printf(".");
+    tone(beep,310);
+    /*Motor Initialize*/
+    motorsetup();
+    /*Wifi Initialize*/
+    ESP_SERIAL.printf(".");
+    #if (ESP_MODE != ESP_PS3)
+    WiFi.mode(WIFI_AP_STA);
+    WiFi.softAP(ESP_SSID, ESP_WIFIPASS);           // SSIDとパスの設定
+    delay(100);                        // 追記：このdelayを入れないと失敗する場合がある
+    WiFi.softAPConfig(ip, ip, subnet); // IPアドレス、ゲートウェイ、サブネットマスクの設定
+    Serial.print("AP IP address: ");
+    IPAddress myIP = WiFi.softAPIP();
+    Serial.println(myIP);
+    Serial.println("Starting UDP");
+    udp.begin(LocalPort);  // UDP通信の開始(引数はポート番号)
+    Serial.print("Local port: ");
+    Serial.println(LocalPort);
+    WiFi.setTxPower(WIFI_POWER_MINUS_1dBm);
+    /*OTA Initialize*/
+    #if (ESP_OTAE == 1)
+    OTAsetup();
+    otastatus=" ";
+    #else
+    otastatus="OTA off";
+    #endif
+    #else
+    otastatus="WIFI off";
+    #endif
+    ESP_SERIAL.printf(".\n\r");
+    ESP_SERIAL.println("ESP:System task settings");
+    /*Encoder Initialize*/
+    #if (MOTORMODE ==PID_M)
+    ESP_SERIAL.println("ESP:Encoder task settings");
+    ((ESPMotor*)md[0])->Reset();
+    ((ESPMotor*)md[1])->Reset();
+    xTaskCreatePinnedToCore(enctask,"Encoder task",1024,NULL,2,NULL,0);
+    #endif
+    /*SDcard Initialize*/
+    #if (SD == ON)
+    ESP_SERIAL.println("ESP:Log task settings");
+    xTaskCreatePinnedToCore(SDlog,"Log task",4048,NULL,1,NULL,1);
+    #endif
+    /*I2CTask Initialize*/
+    #if(I2CPORT == ON)
+    ESP_SERIAL.println("ESP:I2C task settings");
+    xTaskCreatePinnedToCore(ESPtask_i2c,"I2C task",8096,NULL,3,NULL,0);
+    #endif
+    /*Odmetry update Task Initialize*/
+    ESP_SERIAL.println("ESP:Odmetry task settings");
+    xTaskCreatePinnedToCore(Odmetryupdate,"Odmetry task",8096,NULL,0,NULL,1);
+    /*ROS Initialize*/
+    #if (ROS == ON)
+    ESP_SERIAL.println("ESP:ROS task settings");
+    xTaskCreatePinnedToCore(ESPROStask,"ROStask",8096,NULL,1,NULL,1);
+    #endif
+    /*melody*/
+    ESP_SERIAL.println("ESP:Melody task settings");
+    xTaskCreatePinnedToCore(melodytask,"Melody task",1024,NULL,0,NULL,1);
+    ESP_SERIAL.println("ESP:Completed all system task settings");
+    #if (ESP_MODE == ESP_PS3)
+    ESP_SERIAL.println("ESP:PS3 controller settings");
+    PS3init();
+    #endif
+    tasksel=STARTTASK;
+    /*end*/
+    run.flag.Start=true;
+    ESP_SERIAL.printf("ESP:Finish Initialization!\n");
+    tone(beep,246);
+    delay(100);
+    noTone(beep);
+    digitalWrite(StatusLED,LOW);
+    return 0;
+}
+void ESP32Mather::setfunction(const char*name,void (*tfp)(Flag_t *))
+{
+    run.setfunction(name,tfp);
+}
+void ESP32Mather::update()
+{
+    /*Variable declaration*/
+    static bool mflag=false;
+    bool sel=false;
+    EMS=Emergency_Stop();
+    if((LOWV=LowV())==true)
     {
-        MELODY = true;
-        SerialMonitor = true;
-        StartFlag=false;
+        if(!mflag)
+            melodysel=UnmountBeep;
+        mflag=true;
+    }
+    /*OTA*/
+    #if (ESP_OTAE == 1)
+    ArduinoOTA.handle();
+    #endif
+    if(OTAFLAG)
+        return;
+    /*USBSerial*/
+    run.flag.SerialData=0;
+    if(Serial.available())run.flag.SerialData = Serial.read();
+    /*debug*/
+    if(run.flag.SerialMonitor)
+    {
+        run.flag.Debug=pdt.stand_by(d_interval);
+        if(run.flag.Debug)
+        {
+            ESP_SERIAL.printf("/%s/%s/%.2f[℃]/%.2f[V],LOWV %d,EM %d/",run.status(),i2cerror(I2C_Error),CPUTemp(),Vmonitor(),LOWV,EMS);
+            ESP_SERIAL.print(sdprint);
+            sdprint="/";
+        }
+    }
+    else
+        run.flag.Debug=false;
+    /*wifi udp read*/
+    #if (ESP_MODE != ESP_PS3)
+    if (udp.parsePacket())run.flag.UDPData=udp.read();
+    if(run.flag.UDPData==193)sel=true;
+    if(tasksel==wificonNUM)
+    {
+        udp.beginPacket(ip2,LocalPort);
+        udp.write((byte)EMS);
+        udp.endPacket();
+    }
+
+    #endif
+    #if (ESP_MODE == ESP_PS3)
+    if(PS3PSButton())sel=true;
+    #endif
+    /*select task*/
+    STARTSWITCH<=!STSW()+sel;
+    if(run.flag.SerialData=='!')
+    {
+        tasksel++;
+        #if (ESP_MODE != ESP_PS3)
+        run.flag.UDPData=48;
+        #endif
+    }
+    switch(STARTSWITCH)
+    {
+        case 1:
+            melodysel=Onbeep;
+            run.flag.Start=true;
+            tasksel++;
+            #if (ESP_MODE != ESP_PS3)
+            run.flag.UDPData=48;
+            #endif
+        break;
+        case 2:
+            #if (ESP_MODE != ESP_PS3)
+            melodysel=Onbeep;
+            run.flag.Start=true;
+            tasksel=wificonNUM;
+            run.flag.UDPData=48;
+            #endif
+        break;
+        case 3:
+        break;
+        default:
+        break;
+    }
+    /*taskrun*/
+    run.select(&tasksel);
+    if(EMS)
+    {
+        digitalWrite(STBY, LOW);
+    }
+    /*Wifi connection check*/
+    #if (ESP_MODE != ESP_PS3)
+    if(WiFi.softAPgetStationNum())
+    {
+        if(wificonnect==false)
+        {
+            melodysel=ConectBeep;
+            wificonnect=true;
+            tasksel=wificonNUM;
+        }
+    }
+    else wificonnect=false;
+    #endif
+    if(run.flag.Melody)
+        MOUNT<=!mount();
+    switch(MOUNT)
+    {
+        case 1:
+            melodysel++;
+            melreset();
+        break;
+        case 2:
+
+        break;
+        case 3:
+            #if (SD == ON)
+            melodysel=UnmountBeep;
+            #endif
+        break;
+        default:
+        break;
+    }
+    #if (ESP_MODE == ESP_PS3)
+    static bool ps3con=false;
+    PS3Update();
+    if(PS3Conect()&&!ps3con)
+    {
+        //tasksel=1;
+        melodysel=ConectBeep;
+        ps3con=true;
+    }
+    #endif
+    delay(Delta_T*100);//Execution interval
+}
+
+void ESP32Mather::Error()
+{
+    melodysel=ErrorBeep;
+}
+void ESP32Mather::Start()
+{
+    melodysel=StartBeep;
+}
+void ESP32Mather::Start_()
+{
+    melodysel=XPStartBeep;
+}
+
+bool ESP32Mather::EMARGENCYSTOP()
+{
+    return EMS;
+}
+
+
+const char* ESP32Mather::Systemstatus()
+{
+    switch(melodysel)
+    {
+        case ErrorBeep:return "Abnormal";
+        case ConectBeep:return "Wifi Conect";
+        case XPStartBeep:
+        case StartBeep:return "Start";
+    }
+    if(LOWV&&!EMS)
+    {
+        return "Low battery voltage";
+    }
+    return "Normal";
+}
+const char* ESP32Mather::Taskstatus()
+{
+    return run.status();
+}
+const char* ESP32Mather::OTAstatus()
+{
+    return otastatus.c_str();
+}
+
+void test(Flag_t *flag)
+{
+    if(flag->Start)
+    {
+        flag->Melody = true;
+        flag->SerialMonitor = true;
+        flag->Start=false;
     }
     static float vx=0,angle=0;
-    if(debug_t)
+    if(flag->Debug)
     {
         #if (MOTORMODE ==PID_)
         ESP_SERIAL.printf("/md%d/vx/%.2f/%.2f/m1(Kp=%f,Ki=%f,Kd=%f)rpm=%7.3f/m2(Kp=%f,Ki=%f,Kd=%f)rpm=%7.3f/\n\r",mdc,vx,angle,((ESPMotor*)md[0])->Kp,((ESPMotor*)md[0])->Ki,((ESPMotor*)md[0])->Kd,md[0]->now_val,((ESPMotor*)md[1])->Kp,((ESPMotor*)md[1])->Ki,((ESPMotor*)md[1])->Kd,md[1]->now_val);
@@ -458,9 +554,9 @@ void test()
         ESP_SERIAL.printf("/MD Vx %.2f,Angular %.2f/\n\r",vx,angle);
         #endif
     }
-    if(EMS)
+    if(ESP32M.EMARGENCYSTOP())
         return;
-    switch(serialdata)
+    switch(flag->SerialData)
     {
         case 'w':vx+=0.1;break;
         case 's':vx-=0.1;break;
@@ -482,35 +578,35 @@ void test()
     switch(mode)
     {
         case 'P':
-            if(serialdata=='.')((ESPMotor*)md[mdc])->Kp+=0.01;
-            if(serialdata==',')((ESPMotor*)md[mdc])->Kp-=0.01;
+            if(flag->SerialData=='.')((ESPMotor*)md[mdc])->Kp+=0.01;
+            if(flag->SerialData==',')((ESPMotor*)md[mdc])->Kp-=0.01;
             break;
         case 'I':
-            if(serialdata=='.')((ESPMotor*)md[mdc])->Ki+=0.0001;
-            if(serialdata==',')((ESPMotor*)md[mdc])->Ki-=0.0001;
+            if(flag->SerialData=='.')((ESPMotor*)md[mdc])->Ki+=0.0001;
+            if(flag->SerialData==',')((ESPMotor*)md[mdc])->Ki-=0.0001;
             break;
         case 'D':
-            if(serialdata=='.')((ESPMotor*)md[mdc])->Kd+=0.000001;
-            if(serialdata==',')((ESPMotor*)md[mdc])->Kd-=0.000001;
+            if(flag->SerialData=='.')((ESPMotor*)md[mdc])->Kd+=0.000001;
+            if(flag->SerialData==',')((ESPMotor*)md[mdc])->Kd-=0.000001;
             break;
     }
     #endif
     wheel->Move(vx,0,angle);
 }
 #if (ESP_MODE != ESP_PS3)
-void wificon()
+void wificon(Flag_t *flag)
 {
-    if(StartFlag)
+    if(flag->Start)
     {
-        MELODY = true;
-        SerialMonitor = true;
-        StartFlag=false;
+        flag->Melody = true;
+        flag->SerialMonitor = true;
+        flag->Start=false;
     }
     static float sp=0.3;
-    if(debug_t)ESP_SERIAL.printf("%d/%s/speed %3.2f/\n\r",udpdata,udpmode,sp);
-    if(EMS)
+    if(flag->Debug)ESP_SERIAL.printf("%d/%s/speed %3.2f/\n\r",flag->UDPData,udpmode,sp);
+    if(ESP32M.EMARGENCYSTOP())
         return;
-    switch(udpdata)
+    switch(flag->UDPData)
     {
         case 49:
             if(l1.swread(sw1)&&l1.swread(sw2))wheel->Stop();
@@ -547,7 +643,7 @@ void wificon()
         case 102:wheel->Stop();udpmode="stop";break;//stop
     }
     if(sp>=1.0)sp=0.3;
-    if(udpdata!=97)
+    if(flag->UDPData!=97)
     {
         if(sel>10){sp+=0.1;}
         sel=0;
@@ -555,20 +651,20 @@ void wificon()
 }
 #endif
 #if (ESP_MODE == ESP_PS3)
-void ps3task()
+void ps3task(Flag_t *flag)
 {
-    if(StartFlag)
+    if(flag->Start)
     {
-        MELODY = true;
-        SerialMonitor = true;
-        StartFlag=false;
+        flag->Melody = true;
+        flag->SerialMonitor = true;
+        flag->Start=false;
     }
-    if(debug_t)
+    if(flag->Debug)
     {
         ESP_SERIAL.printf("%f/%f/%f/lx=%d/ly=%d/rx=%d/ry=%d\n\r",Vx,Vy,Angular,PS3stick(lX),PS3stick(lY),PS3stick(rX),PS3stick(rY));
         ESP_SERIAL.print(PS3Debug);
     }
-    if(EMS)
+    if(ESP32M.EMARGENCYSTOP())
         return;
     bool b=PS3Controller(&Vx,&Vy,&Angular);
     if(b||(l1.swread(sw1)&&l1.swread(sw2)&&Vy>0))wheel->Stop();
@@ -578,101 +674,20 @@ void ps3task()
 
 void ESPinit()
 {
-    /*UART setup*/
-    Serial.begin(115200);
-    /*BTSerial Initialize*/
-    #if (ESP_MODE == ESP_BTS)
-    BTSerial.begin(ESP_BTSNAME);
-    #endif
-    /*Digitalpin setup*/
-    pinMode(STBY, OUTPUT);
-    pinMode(SD_CHECK, INPUT);
-    pinMode(SD_MOUNT, INPUT);
-    pinMode(stsw, INPUT_PULLUP);
-    pinMode(StatusLED, OUTPUT);
-    digitalWrite(StatusLED, HIGH);
-    digitalWrite(STBY, LOW);
-    Vmonitor_setup();
-
-    tone(beep,310);
-    /*Motor Initialize*/
-    motorsetup();
-    /*Encoder Initialize*/
-    #if (MOTORMODE ==PID_M)
-    ((ESPMotor*)md[0])->Reset();
-    ((ESPMotor*)md[1])->Reset();
-    xTaskCreatePinnedToCore(enctask,"Encoder task",1024,NULL,2,NULL,0);
-    #endif
-
-    /*Wifi Initialize*/
-    #if (ESP_MODE != ESP_PS3)
-    WiFi.mode(WIFI_AP_STA);
-    WiFi.softAP(ESP_SSID, ESP_WIFIPASS);           // SSIDとパスの設定
-    delay(100);                        // 追記：このdelayを入れないと失敗する場合がある
-    WiFi.softAPConfig(ip, ip, subnet); // IPアドレス、ゲートウェイ、サブネットマスクの設定
-    Serial.print("AP IP address: ");
-    IPAddress myIP = WiFi.softAPIP();
-    Serial.println(myIP);
-    Serial.println("Starting UDP");
-    udp.begin(LocalPort);  // UDP通信の開始(引数はポート番号)
-    Serial.print("Local port: ");
-    Serial.println(LocalPort);
-    WiFi.setTxPower(WIFI_POWER_MINUS_1dBm);
-    /*OTA Initialize*/
-    #if (ESP_OTAE == 1)
-    OTAinit();
-    #endif
-
-    #endif
-
-    /*SDcard Initialize*/
-    #if (SD == ON)
-    xTaskCreatePinnedToCore(SDlog,"Log task",4048,NULL,1,NULL,1);
-    #endif
-
-    /*I2CTask Initialize*/
-    #if(I2CPORT == ON)
-    xTaskCreatePinnedToCore(ESPtask_i2c,"I2C task",8096,NULL,3,NULL,0);
-    #endif
-
-    /*Odmetry update Task Initialize*/
-    xTaskCreatePinnedToCore(Odmetryupdate,"Odmetry task",8096,NULL,0,NULL,1);
-
-    #if (ESP_MODE == ESP_PS3)
-    PS3init();
-    #endif
-
-    /*ROS Initialize*/
-    #if (ROS == ON)
-    xTaskCreatePinnedToCore(ESPROStask,"ROStask",8096,NULL,1,NULL,1);
-    #endif
-
-    /*melody*/
-    xTaskCreatePinnedToCore(melodytask,"Melody task",1024,NULL,0,NULL,1);
+    ESP32M.setup();
     /*task setup*/
     #if(DEFAULTTASK == ON)
-
     #if (MOTORMODE == PID_M)
-    run.setfunction("gainsetup",test);
+    ESP32M.setfunction("gainsetup",test);
     #else
-    run.setfunction("Motor Test",test);
+    ESP32M.setfunction("Motor Test",test);
     #endif
     #if (ESP_MODE != ESP_PS3)
-    run.setfunction("wificontroller",wificon);
+    ESP32M.setfunction("wificontroller",wificon);
     #else
-    run.setfunction("ps3controller",ps3task);
+    ESP32M.setfunction("ps3controller",ps3task);
     #endif
-
     #endif
-    tasksel=STARTTASK;
-    /*end*/
-    otastatus=" ";
-    StartFlag=true;
-    ESP_SERIAL.printf("ESP: Finish init\n");
-    tone(beep,246);
-    delay(100);
-    noTone(beep);
-    digitalWrite(StatusLED,LOW);
 }
 /*
 FreeRTOS memo

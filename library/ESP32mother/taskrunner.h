@@ -8,20 +8,31 @@
 extern "C" {
 #endif
 
+typedef struct Flag
+{
+    bool Debug;
+    bool Start;
+    bool SerialMonitor;
+    bool Melody;
+    int SerialData;
+    int UDPData;
+}Flag_t;
+
 class taskrun
 {
 	private:
-                int taskstatus,Number_of_tasks;
-                bool tauto;
-                const char *taskname[20];
-                void (*taskp[20])(void);
-                void Setup();
+        int taskstatus,Number_of_tasks;
+        bool tauto;
+        const char *taskname[20];
+        void (*taskp[20])(Flag_t *);
+        void Setup();
 	public:
-                taskrun();      
-                void setfunction(const char*name,void (*tfp)(void),int tasknum);//tasknum 1~
-                void setfunction(const char*name,void (*tfp)(void));
-                void select(int *statusnum);
-                const char *status();
+        Flag_t flag;
+        taskrun();
+        void setfunction(const char*name,void (*tfp)(Flag_t *),int tasknum);//tasknum 1~
+        void setfunction(const char*name,void (*tfp)(Flag_t *));
+        void select(int *statusnum);
+        const char *status();
 };
 
 #if defined __cplusplus
