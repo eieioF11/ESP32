@@ -33,7 +33,7 @@ class ServoSpeed
 	public:
 		ServoSpeed();
 		void begin(int pin,int min,int max);
-		bool set(int angle,int speed);
+		bool set(int angle,int speed,int step=1);
 		void setMs(int val);
 		float nowangle();
         int nowMs();

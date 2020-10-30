@@ -333,8 +333,10 @@ int ESP32Mather::setup()
     xTaskCreatePinnedToCore(ESPtask_i2c,"I2C task",8096,NULL,3,NULL,0);
     #endif
     /*Odmetry update Task Initialize*/
+    #if(I2CPORT == ON && MOTORMODE != DUTY_M)
     ESP_SERIAL.println("ESP:Odmetry task settings");
     xTaskCreatePinnedToCore(Odmetryupdate,"Odmetry task",8096,NULL,0,NULL,1);
+    #endif
     /*ROS Initialize*/
     #if (ROS == ON)
     ESP_SERIAL.println("ESP:ROS task settings");
