@@ -14,10 +14,16 @@ kybode comand
 #include "ServoSpeed.h"
 
 volatile int angle[4];
-const int anglemap[2][4]=
+const int anglemap[2][2][4]=
 {
-	{0,0,0,10},
-	{90,90,90,10},
+	{
+		{120,0,120,0},
+		{  0,0,120,0},
+	},
+	{
+		{10,120,110,120},
+		{10,  0,110,  0},
+	},
 };
 
 ServoSpeed s[4];
@@ -57,7 +63,7 @@ void setup()
 	/*User task setup*/
 	ESP32M.setfunction("ROBOCON MAIN task", MAIN);
 	ESP32M.setfunction("Servo task", Servotest);
-	xTaskCreatePinnedToCore(Servo,"servo task",1024,NULL,2,NULL,0);
+	xTaskCreatePinnedToCore(Servo,"servo task",1024,NULL,3,NULL,1);
 }
 
 void loop()
@@ -66,6 +72,9 @@ void loop()
 }
 
 uint8_t ST[4];
+uint8_t count[4];
+uint8_t movesel=0;
+uint8_t Servoend=0;
 void MAIN(Flag_t *flag)
 {
     if(flag->Start)
@@ -75,9 +84,9 @@ void MAIN(Flag_t *flag)
         flag->Start=false;
     }
 	ST[0] = (PS3stick(lX)>0)?128-PS3stick(lX):255-PS3stick(lX)+128;
-	ST[1] = (PS3stick(lY)>0)?128-PS3stick(lY):255-PS3stick(lY)+128;
+	ST[1] = (PS3stick(lY)*-1>0)?128-PS3stick(lY)*-1:255-PS3stick(lY)*-1+128;
 	ST[2] = (PS3stick(rX)>0)?128-PS3stick(rX):255-PS3stick(rX)+128;
-	ST[3] = (PS3stick(rY)*-1>0)?128-PS3stick(rY)*-1:255-PS3stick(rY)*-1+128;
+	ST[3] = (PS3stick(rY)>0)?128-PS3stick(rY):255-PS3stick(rY)+128;
 	if (flag->Debug)
 	{
 		ESP_SERIAL.printf("%f/%f/%f/lx=%d/ly=%d/rx=%d/ry=%d\n\r",Vx,Vy,Angular,ST[0],ST[1],ST[2],ST[3]);
@@ -85,17 +94,62 @@ void MAIN(Flag_t *flag)
 	}
 	if (ESP32M.EMARGENCYSTOP())
 		return;
-	PS3Controller(&Vx,&Vy,&Angular,false);
+	uint16_t PS3button=PS3Button();
+    PS3Debug="";
+    for(int i=0;i<16;i++)
+    {
+        switch((int)PS3button&1ull<<i)//0b/select/start/l3/r3/l1/r1/l2/r2/up/down/right/left/△/〇/×/□/
+        {
+            case 0b1000000000000000:St.addprintf(&PS3Debug,"select\n");break;
+            case 0b0100000000000000:St.addprintf(&PS3Debug,"start\n");break;
+            case 0b0010000000000000:St.addprintf(&PS3Debug,"l3\n");break;
+            case 0b0001000000000000:St.addprintf(&PS3Debug,"r3\n");break;
+            case 0b0000100000000000:St.addprintf(&PS3Debug,"l1\n");Angular=-0.2;break;
+            case 0b0000010000000000:St.addprintf(&PS3Debug,"r1\n");Angular=0.2;break;
+            case 0b0000001000000000:St.addprintf(&PS3Debug,"l2\n");break;
+            case 0b0000000100000000:St.addprintf(&PS3Debug,"r2\n");break;
+            case 0b0000000010000000:St.addprintf(&PS3Debug,"up\n");Vy=0.2;break;
+            case 0b0000000001000000:St.addprintf(&PS3Debug,"down\n");Vy=-0.2;break;
+            case 0b0000000000100000:St.addprintf(&PS3Debug,"right\n");Vx=-0.2;break;
+            case 0b0000000000010000:St.addprintf(&PS3Debug,"left\n");Vx=0.2;break;
+            case 0b0000000000001000:St.addprintf(&PS3Debug,"triangle\n");movesel=0;break;
+            case 0b0000000000000100:St.addprintf(&PS3Debug,"circle\n");movesel=1;break;
+            case 0b0000000000000010:St.addprintf(&PS3Debug,"cross\n");break;
+            case 0b0000000000000001:St.addprintf(&PS3Debug,"square\n");break;
+        }
+    }
+    if(!PS3button)
+        Vx=Vy=Angular=0.0f;
+	//PS3Controller(&Vx,&Vy,&Angular,false);
 	for(int i=0;i<4;i++)
 	{
-		angle[i]=map(ST[i],0,255,MIN_PULSE,MAX_PULSE);
-		//s[i].writeMicroseconds(angle[i]);
-		s[i].setMs(angle[i]);
+		if(PS3button)
+		{
+			if(s[i].set(anglemap[movesel][count[i]][i],10000,2))
+			{
+				if(movesel!=1)
+					count[i]=(count[i]>=1)?0:count[i]+1;
+				else
+				{
+					if(i==1||i==3)
+						Servoend++;
+					if(Servoend>=2)
+					{
+						Servoend=0;
+						count[i]=(count[i]>=1)?0:count[i]+1;
+					}
+				}
+			}
+		}
+		else
+		{
+			angle[i]=map(ST[i],0,255,MIN_PULSE,MAX_PULSE);
+			s[i].setMs(angle[i]);
+		}
 	}
     wheel->Move(Vy,Vx,Angular+Vx);
 }
 
-uint8_t count[4];
 void Servotest(Flag_t *flag)
 {
     if(flag->Start)
@@ -114,10 +168,9 @@ void Servotest(Flag_t *flag)
 		return;
 	for (int i = 0; i < 4; i++)
 	{
-		if(s[i].set(anglemap[count[i]][i],7000))
+		if(s[i].set(anglemap[movesel][count[i]][i],10000))
 		{
 			count[i]=(count[i]>=1)?0:count[i]+1;
 		}
 	}
-	//Servomove();
 }

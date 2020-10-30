@@ -14,14 +14,14 @@ void ServoSpeed::begin(int pin,int min,int max)
 	s.setPeriodHertz(50);
 	s.attach(pin);
 }
-bool ServoSpeed::set(int angle,int speed)
+bool ServoSpeed::set(int angle,int speed,int step)
 {
 	if(this->start)
 	{
 		this->target=map(angle,0,MAX_ANGLE,this->min,this->max);
 		int S=abs(this->angle - this->target);
 		if(S!=0)
-			this->step=(this->target - this->angle) / S;
+			this->step=step*((this->target - this->angle) / S);
 		this->speed=speed;
 		this->flag=false;
 		this->start=false;
@@ -53,7 +53,7 @@ void ServoSpeed::update()
 	nowdeg = mapfloat(angle,min,max,0,MAX_ANGLE);
 	if (st.stand_by(1.f / (float)speed) && !flag)
 		angle += step;
-	if (abs(angle-target)<=1||angle>=max||angle<=min)
+	if (abs(angle-target)<=abs(step)||angle>=max||angle<=min)
 		flag = true;
 	if(!stop)
 		s.writeMicroseconds(angle);
