@@ -385,6 +385,23 @@ void ESP32Mather::update()
     /*USBSerial*/
     run.flag.SerialData=0;
     if(Serial.available())run.flag.SerialData = Serial.read();
+    /*wifi udp read*/
+    #if (ESP_MODE != ESP_PS3)
+    if (udp.parsePacket())run.flag.UDPData=udp.read();
+    if(run.flag.UDPData==1)
+        EMS=true;
+    if(run.flag.UDPData==193)sel=true;
+    /*
+    if(tasksel==wificonNUM)
+    {
+        if(EMS)
+        {
+            udp.beginPacket(ip2,LocalPort);
+            udp.write((byte)1);
+            udp.endPacket();
+        }
+    }*/
+    #endif
     /*debug*/
     if(run.flag.SerialMonitor)
     {
@@ -398,18 +415,7 @@ void ESP32Mather::update()
     }
     else
         run.flag.Debug=false;
-    /*wifi udp read*/
-    #if (ESP_MODE != ESP_PS3)
-    if (udp.parsePacket())run.flag.UDPData=udp.read();
-    if(run.flag.UDPData==193)sel=true;
-    if(tasksel==wificonNUM)
-    {
-        udp.beginPacket(ip2,LocalPort);
-        udp.write((byte)EMS);
-        udp.endPacket();
-    }
 
-    #endif
     #if (ESP_MODE == ESP_PS3)
     if(PS3PSButton())sel=true;
     #endif

@@ -7,11 +7,14 @@
 WiFiUDP udp;
 
 // WiFi settings
-IPAddress IP(192, 168, 30, 6);
+const IPAddress sendip(192,168,30,4);//送り先のIP
+const IPAddress IP(192, 168, 30, 6);
 const char *ssid = "ESP32ROBO";
 const char *password = "roborobo";
 #define LocalPort 10000 //local host
+
 #define LED1 14
+#define BTLED 13
 #define EMSPIN 12
 
 inline int EMSW()
@@ -40,20 +43,48 @@ void setup()
 	Serial.begin(115200);
 	pinMode(EMSPIN, INPUT);
 	pinMode(LED1, OUTPUT);
+	pinMode(BTLED, OUTPUT);
 	Serial.println("start");
 	WiFi.mode(WIFI_STA); //重要!
 	udp.begin(LocalPort);
 	digitalWrite(LED1,LOW);
+	digitalWrite(BTLED,LOW);
 	connectWiFi();
 }
 
+bool flag=false;
+int count=0;
 void loop()
 {
 	EMS=EMSW();
-	Serial.printf("EMS %d\n\r",EMS);
-	udp.beginPacket(IP, LocalPort);
-	udp.write((byte)EMS);
-	udp.endPacket();
+	if(EMS)
+	{
+		count=0;
+		flag=false;
+		udp.beginPacket(sendip, LocalPort);
+		udp.write(1);
+		udp.endPacket();
+		Serial.printf("EMS send\n\r");
+		digitalWrite(BTLED,LOW);
+	}
+	else
+	{
+		digitalWrite(BTLED,HIGH);
+		if(!flag)
+		{
+			udp.beginPacket(sendip, LocalPort);
+			udp.write(0);
+			udp.endPacket();
+			Serial.printf("0 send\n\r");
+			if(count>20)
+			{
+				count=0;
+				flag=true;
+			}
+			else
+				count++;
+		}
+	}
 	if (WiFi.status() != WL_CONNECTED)
 	{
 		digitalWrite(LED1,LOW);
@@ -61,4 +92,5 @@ void loop()
 		Serial.println("disconnect!");
 		connectWiFi();
 	}
+	delay(10);
 }
