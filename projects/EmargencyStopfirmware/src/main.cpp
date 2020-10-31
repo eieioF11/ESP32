@@ -11,9 +11,8 @@ IPAddress IP(192, 168, 30, 6);
 const char *ssid = "ESP32ROBO";
 const char *password = "roborobo";
 #define LocalPort 10000 //local host
-#define LED1 0
-#define LED2 1
-#define EMSPIN 3
+#define LED1 14
+#define EMSPIN 12
 
 inline int EMSW()
 {
@@ -33,19 +32,18 @@ void connectWiFi()
 		Serial.print(".");
 	}
 	Serial.println("CONNECTED!");
+	digitalWrite(LED1,HIGH);
 }
 
 void setup()
 {
 	Serial.begin(115200);
-	/*
 	pinMode(EMSPIN, INPUT);
 	pinMode(LED1, OUTPUT);
-	pinMode(LED2, OUTPUT);
-	*/
 	Serial.println("start");
 	WiFi.mode(WIFI_STA); //重要!
 	udp.begin(LocalPort);
+	digitalWrite(LED1,LOW);
 	connectWiFi();
 }
 
@@ -58,6 +56,7 @@ void loop()
 	udp.endPacket();
 	if (WiFi.status() != WL_CONNECTED)
 	{
+		digitalWrite(LED1,LOW);
 		WiFi.disconnect();
 		Serial.println("disconnect!");
 		connectWiFi();
