@@ -14,15 +14,15 @@ kybode comand
 #include "ServoSpeed.h"
 
 volatile int angle[4];
-const int anglemap[2][2][4]=
+const int anglemap[][2][4]=
 {
-	{
-		{120,0,120,0},
-		{  0,0,120,0},
-	},
 	{
 		{10,120,110,120},
 		{10,  0,110,  0},
+	},
+	{
+		{120,0,120,0},
+		{  0,0,120,0},
 	},
 };
 
@@ -53,7 +53,6 @@ void Servo(void *arg)
 }
 
 void MAIN(Flag_t *flag);
-void Servotest(Flag_t *flag);
 
 void setup()
 {
@@ -62,7 +61,6 @@ void setup()
 	Servobegin();
 	/*User task setup*/
 	ESP32M.setfunction("ROBOCON MAIN task", MAIN);
-	ESP32M.setfunction("Servo task", Servotest);
 	xTaskCreatePinnedToCore(Servo,"servo task",1024,NULL,3,NULL,1);
 }
 
@@ -74,7 +72,7 @@ void loop()
 uint8_t ST[4];
 uint8_t count[4];
 uint8_t movesel=0;
-uint8_t Servoend=0;
+uint8_t Servoend[4]={0};
 void MAIN(Flag_t *flag)
 {
     if(flag->Start)
@@ -108,12 +106,12 @@ void MAIN(Flag_t *flag)
             case 0b0000010000000000:St.addprintf(&PS3Debug,"r1\n");Angular=0.2;break;
             case 0b0000001000000000:St.addprintf(&PS3Debug,"l2\n");break;
             case 0b0000000100000000:St.addprintf(&PS3Debug,"r2\n");break;
-            case 0b0000000010000000:St.addprintf(&PS3Debug,"up\n");Vy=0.2;break;
-            case 0b0000000001000000:St.addprintf(&PS3Debug,"down\n");Vy=-0.2;break;
-            case 0b0000000000100000:St.addprintf(&PS3Debug,"right\n");Vx=-0.2;break;
-            case 0b0000000000010000:St.addprintf(&PS3Debug,"left\n");Vx=0.2;break;
-            case 0b0000000000001000:St.addprintf(&PS3Debug,"triangle\n");movesel=0;break;
-            case 0b0000000000000100:St.addprintf(&PS3Debug,"circle\n");movesel=1;break;
+            case 0b0000000010000000:St.addprintf(&PS3Debug,"up\n");movesel=0;Vy=0.2;break;
+            case 0b0000000001000000:St.addprintf(&PS3Debug,"down\n");movesel=0;Vy=-0.2;break;
+            case 0b0000000000100000:St.addprintf(&PS3Debug,"right\n");Angular=-0.2;break;
+            case 0b0000000000010000:St.addprintf(&PS3Debug,"left\n");Angular=0.2;break;
+            case 0b0000000000001000:St.addprintf(&PS3Debug,"triangle\n");movesel=1;break;
+            case 0b0000000000000100:St.addprintf(&PS3Debug,"circle\n");break;
             case 0b0000000000000010:St.addprintf(&PS3Debug,"cross\n");break;
             case 0b0000000000000001:St.addprintf(&PS3Debug,"square\n");break;
         }
@@ -127,17 +125,20 @@ void MAIN(Flag_t *flag)
 		{
 			if(s[i].set(anglemap[movesel][count[i]][i],10000,2))
 			{
-				if(movesel!=1)
+				if(movesel!=0)
 					count[i]=(count[i]>=1)?0:count[i]+1;
 				else
 				{
-					if(i==1||i==3)
-						Servoend++;
-					if(Servoend>=2)
-					{
-						Servoend=0;
-						count[i]=(count[i]>=1)?0:count[i]+1;
-					}
+					Servoend[i]=1;
+				}
+			}
+			if(Servoend[0]==1&&Servoend[1]==1&&Servoend[2]==1&&Servoend[3]==1)
+			{
+				for(int j=0;j<4;j++)
+				{
+					Servoend[j]=0;
+					i=0;
+					count[j]=(count[j]>=1)?0:count[j]+1;
 				}
 			}
 		}
@@ -147,30 +148,5 @@ void MAIN(Flag_t *flag)
 			s[i].setMs(angle[i]);
 		}
 	}
-    wheel->Move(Vy,Vx,Angular+Vx);
-}
-
-void Servotest(Flag_t *flag)
-{
-    if(flag->Start)
-    {
-        flag->Melody = true;
-        flag->SerialMonitor = true;
-        flag->Start=false;
-    }
-	if (flag->Debug)
-	{
-		for(int i=0;i<4;i++)
-			ESP_SERIAL.printf("/%f,%d,%d/",s[i].nowangle(),s[i].nowMs(),count[i]);
-		ESP_SERIAL.printf("\n\r");
-	}
-	if (ESP32M.EMARGENCYSTOP())
-		return;
-	for (int i = 0; i < 4; i++)
-	{
-		if(s[i].set(anglemap[movesel][count[i]][i],10000))
-		{
-			count[i]=(count[i]>=1)?0:count[i]+1;
-		}
-	}
+    wheel->Move(Vy,Vx,Angular);
 }
