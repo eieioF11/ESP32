@@ -169,6 +169,8 @@ Filtered_double Vx, Vy, Angular;
 
 void I2C_task(void *arg) //I2C communication function
 {
+	pinMode(27, INPUT);//P2Bは設計ミスにより使用不可
+    dacWrite(26, 32);//2A limit
 	Wire.begin(ESP_SDA, ESP_SCL, 1000000);
 	pinMode(ESP_SDA, PULLUP);
 	pinMode(ESP_SCL, PULLUP);
