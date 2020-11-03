@@ -24,6 +24,14 @@ const int anglemap[][2][4]=
 		{120,0,120,0},
 		{  0,0,120,0},
 	},
+	{
+		{40,0,100,120},
+		{40,0,100,120},
+	},
+	{
+		{40,40,100,80},
+		{40,40,100,80},
+	},
 };
 
 ServoSpeed s[4];
@@ -73,6 +81,8 @@ uint8_t ST[4];
 uint8_t count[4];
 uint8_t movesel=0;
 uint8_t Servoend[4]={0};
+bool walk=false;
+bool wflag=false;
 void MAIN(Flag_t *flag)
 {
     if(flag->Start)
@@ -102,26 +112,38 @@ void MAIN(Flag_t *flag)
             case 0b0100000000000000:St.addprintf(&PS3Debug,"start\n");break;
             case 0b0010000000000000:St.addprintf(&PS3Debug,"l3\n");break;
             case 0b0001000000000000:St.addprintf(&PS3Debug,"r3\n");break;
-            case 0b0000100000000000:St.addprintf(&PS3Debug,"l1\n");Angular=-0.2;break;
-            case 0b0000010000000000:St.addprintf(&PS3Debug,"r1\n");Angular=0.2;break;
+            case 0b0000100000000000:St.addprintf(&PS3Debug,"l1\n");Angular=0.2;break;
+            case 0b0000010000000000:St.addprintf(&PS3Debug,"r1\n");Angular=-0.2;break;
             case 0b0000001000000000:St.addprintf(&PS3Debug,"l2\n");break;
             case 0b0000000100000000:St.addprintf(&PS3Debug,"r2\n");break;
-            case 0b0000000010000000:St.addprintf(&PS3Debug,"up\n");movesel=0;Vy=0.2;break;
-            case 0b0000000001000000:St.addprintf(&PS3Debug,"down\n");movesel=0;Vy=-0.2;break;
-            case 0b0000000000100000:St.addprintf(&PS3Debug,"right\n");Angular=-0.2;break;
-            case 0b0000000000010000:St.addprintf(&PS3Debug,"left\n");Angular=0.2;break;
-            case 0b0000000000001000:St.addprintf(&PS3Debug,"triangle\n");movesel=1;break;
-            case 0b0000000000000100:St.addprintf(&PS3Debug,"circle\n");break;
-            case 0b0000000000000010:St.addprintf(&PS3Debug,"cross\n");break;
+            case 0b0000000010000000:St.addprintf(&PS3Debug,"up\n");if(movesel!=2&&movesel!=3)movesel=0;walk=true;Vy=-0.2;break;
+            case 0b0000000001000000:St.addprintf(&PS3Debug,"down\n");if(movesel!=2&&movesel!=3)movesel=0;walk=true;Vy=0.2;break;
+            case 0b0000000000100000:St.addprintf(&PS3Debug,"right\n");Angular=0.2;break;
+            case 0b0000000000010000:St.addprintf(&PS3Debug,"left\n");Angular=-0.2;break;
+            case 0b0000000000001000:St.addprintf(&PS3Debug,"triangle\n");movesel=1;wflag=false;break;
+            case 0b0000000000000100:St.addprintf(&PS3Debug,"circle\n");movesel=2;wflag=false;break;
+            case 0b0000000000000010:St.addprintf(&PS3Debug,"cross\n");movesel=3;wflag=false;break;
             case 0b0000000000000001:St.addprintf(&PS3Debug,"square\n");break;
         }
     }
     if(!PS3button)
         Vx=Vy=Angular=0.0f;
+	if(walk)
+	{
+		if(!wflag)
+		{
+			for(int i=0;i<4;i++)
+			{
+				Servoend[i]=0;
+				count[i]=0;
+			}
+			wflag=true;
+		}
+	}
 	//PS3Controller(&Vx,&Vy,&Angular,false);
 	for(int i=0;i<4;i++)
 	{
-		if(PS3button)
+		if(PS3button||movesel==2||movesel==3)
 		{
 			if(s[i].set(anglemap[movesel][count[i]][i],10000,2))
 			{
@@ -144,6 +166,7 @@ void MAIN(Flag_t *flag)
 		}
 		else
 		{
+			wflag=false;
 			angle[i]=map(ST[i],0,255,MIN_PULSE,MAX_PULSE);
 			s[i].setMs(angle[i]);
 		}
