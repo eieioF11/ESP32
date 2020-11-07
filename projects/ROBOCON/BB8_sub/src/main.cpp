@@ -120,7 +120,7 @@ void MAIN(Flag_t *flag)
             case 0b0000000001000000:St.addprintf(&PS3Debug,"down\n");if(movesel!=2&&movesel!=3)movesel=0;walk=true;Vy=0.2;break;
             case 0b0000000000100000:St.addprintf(&PS3Debug,"right\n");Angular=0.2;break;
             case 0b0000000000010000:St.addprintf(&PS3Debug,"left\n");Angular=-0.2;break;
-            case 0b0000000000001000:St.addprintf(&PS3Debug,"triangle\n");movesel=1;wflag=false;break;
+            case 0b0000000000001000:St.addprintf(&PS3Debug,"triangle\n");movesel=1;walk=false;Servoend[0]=Servoend[1]=Servoend[2]=Servoend[3]=1;wflag=false;break;
             case 0b0000000000000100:St.addprintf(&PS3Debug,"circle\n");movesel=2;wflag=false;break;
             case 0b0000000000000010:St.addprintf(&PS3Debug,"cross\n");movesel=3;wflag=false;break;
             case 0b0000000000000001:St.addprintf(&PS3Debug,"square\n");break;
