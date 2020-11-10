@@ -2,7 +2,6 @@
 #define Pi 3.1415926535897932384626433832795028841971f
 Encoder::Encoder(int A,int B,int resolution_,pcnt_unit_t pcnt_)
 {
-    reset();
     Resolution=resolution_;
     pinA=A;
     pinB=B;
@@ -38,6 +37,7 @@ Encoder::Encoder(int A,int B,int resolution_,pcnt_unit_t pcnt_)
     pcnt_counter_resume(pcnt);//カウント開始
     pinMode(A,PULLDOWN);
     pinMode(B,PULLDOWN);
+    reset();
     Reverse(false);
 }
 void Encoder::reset()
