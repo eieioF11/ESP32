@@ -8,16 +8,18 @@
 Odometry::Odometry()
 {
     reset();
-    kalmanX.setAngle(0); // Set starting angle
-    kalmanY.setAngle(0); // Set starting angle
-    kalmanZ.setAngle(0); // Set starting angle
     ARoll.begin(0.25);
     APitch.begin(0.25);
     AYaw.begin(0.25);
 }
 void Odometry::setup(odmmode mode)
 {
+    reset();
     this->mode=mode;
+    kalmanX.setAngle(0); // Set starting angle
+    kalmanY.setAngle(0); // Set starting angle
+    kalmanZ.setAngle(0); // Set starting angle
+    kalmanYaw.setAngle(0);// Set starting angle
 }
 void Odometry::setposture(float Pitch,float Roll,float Yaw)
 {
@@ -83,6 +85,34 @@ void Odometry::Magposture()
     float My=my*cosf(Aroll)-mz*sinf(Aroll);
     Ayaw=atan2f(My,Mx);
 }
+void Odometry::update_posture(float dt)
+{
+    if(sensor==nineaxis)//9-axis sensor
+    {
+        Accelposture();
+        Magposture();
+        //加速度と地磁気から求めた角度をローパスフィルターに通す
+        ARoll  = Aroll*RAD_TO_DEG;
+        APitch = Apitch*RAD_TO_DEG;
+        AYaw   = Ayaw*RAD_TO_DEG;
+        //カルマンフィルタでジャイロセンサーのドリフト誤差補正
+        Roll  = kalmanX.getAngle((float)ARoll,gx, dt);
+        Pitch = kalmanY.getAngle((float)APitch,gy, dt);
+        Yaw   = kalmanZ.getAngle((float)AYaw,gz, dt);
+    }
+    else if(sensor==sixaxis)//6-axis sensor
+    {
+        Accelposture();
+        //カルマンフィルタでジャイロセンサーのドリフト誤差補正
+        Roll  = kalmanX.getAngle((float)ARoll,gx, dt);
+        Pitch = kalmanY.getAngle((float)APitch,gy, dt);
+        //Trapezoidal integral
+        if(abs(gz)<abs(GyroZrange))
+            gz=0.0;
+        Yaw += (preval + gz) * dt / 2.f;
+        preval = gz;
+    }
+}
 void Odometry::update()
 {
     //Posture calculation
@@ -101,9 +131,9 @@ void Odometry::update()
             rx=0.0f,ry=0.0f,rc=0.0f;
             break;
         case TWOWHEEL:
-            rx=(ODOM_R/2.0f)*(w[0]+w[1]);
-            ry=(ODOM_R/2.0f)*(w[0]+w[1]);
-            rc+=(ODOM_R/(2.0f*ODOM_L))*(w[1]-w[0]);
+            rx=ODOM_R*((w[0]+w[1])/2.0f);
+            ry=ODOM_R*((w[0]+w[1])/2.0f);
+            W=(ODOM_R/(2.0f*ODOM_L))*(w[1]-w[0]);
             break;
         case OMUNI2:
             rx=ODOM_R*w[0];
@@ -130,33 +160,8 @@ void Odometry::update()
             break;
     }
 
-    wYaw=rc;
     //姿勢算出
-    if(sensor==nineaxis)//9-axis sensor
-    {
-        Accelposture();
-        Magposture();
-        //加速度と地磁気から求めた角度をローパスフィルターに通す
-        ARoll  = Aroll*RAD_TO_DEG;
-        APitch = Apitch*RAD_TO_DEG;
-        AYaw   = Ayaw*RAD_TO_DEG;
-        //カルマンフィルタでジャイロセンサーのドリフト誤差補正
-        Roll  = kalmanX.getAngle((float)ARoll,gx, dt);
-        Pitch = kalmanY.getAngle((float)APitch,gy, dt);
-        Yaw   = kalmanZ.getAngle((float)AYaw,gz, dt);
-    }
-    else if(sensor==sixaxis)//6-axis sensor
-    {
-        Accelposture();
-        //カルマンフィルタでジャイロセンサーのドリフト誤差補正
-        Roll  = kalmanX.getAngle((float)ARoll,gx, dt);
-        Pitch = kalmanY.getAngle((float)APitch,gy, dt);
-        //Trapezoidal integral
-        if(abs(gz)<abs(GyroZrange))
-            gz=0.0;
-        Yaw += (preval + gz) * dt / 2.f;
-        preval = gz;
-    }
+    update_posture(dt);
     //座標算出
     if(mode!=TWOWHEEL&&mode!=NONE)
     {
@@ -169,9 +174,11 @@ void Odometry::update()
     }
     else if(mode==TWOWHEEL)
     {
-        X+=rx*cosf(rc*DEG_TO_RAD);
-        Y+=ry*sinf(rc*DEG_TO_RAD);
+        rc=kalmanYaw.getAngle((float)Yaw,W,dt);
+        X+=rx*cosf(rc*DEG_TO_RAD)*dt;
+        Y+=ry*sinf(rc*DEG_TO_RAD)*dt;
     }
+    wYaw=rc;
     oldtime=nowtime;
 
 }
@@ -185,7 +192,6 @@ void Odometry::reset()
     Ayaw=0.f;
     nowtime=0ul;
     oldtime=0ul;
-    yawini=0.0f;
     w[0]=0.0f;
     w[1]=0.0f;
     w[2]=0.0f;
