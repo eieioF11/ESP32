@@ -1,36 +1,24 @@
 #include "PWM.h"
 
-int using_ch = 4;
+int using_ch = 0;//Robocon 4
 PwmOut::PwmOut(gpio_num_t gpio)
 {
     begin(gpio);
 }
 void PwmOut::begin(gpio_num_t gpio)
 {
-    pwm_conf.gpio_num   = gpio;
-    if(using_ch > 7)
-    pwm_conf.speed_mode = LEDC_HIGH_SPEED_MODE;
-    else 
-    pwm_conf.speed_mode = LEDC_LOW_SPEED_MODE;
-    pwm_conf.channel    = pwm_ch;
-    pwm_conf.intr_type  = LEDC_INTR_DISABLE;
-    pwm_conf.timer_sel  = LEDC_TIMER_1;
-    pwm_conf.duty       = 0;
+    // １：ledcSetup(チャンネル, 周波数, PWMの範囲);
+    ledcSetup(pwm_ch,5000, 10);
     using_ch +=1;
-    ledc_channel_config(&pwm_conf);
-
-    timer_conf.speed_mode       = LEDC_LOW_SPEED_MODE;
-    timer_conf.bit_num           = LEDC_TIMER_10_BIT;
-    timer_conf.timer_num        = LEDC_TIMER_1;
-    timer_conf.freq_hz          = 5000;
-    ledc_timer_config(&timer_conf);
+    // ２：ledcAttachPin(ピン番号, チャンネル);
+    ledcAttachPin(gpio, pwm_ch);
 }
 void PwmOut::output(float duty)
 {
     Duty = duty;
-    uint32_t width = 1023*duty;
-    ledc_set_duty(LEDC_LOW_SPEED_MODE,pwm_ch,width);
-    ledc_update_duty(LEDC_LOW_SPEED_MODE,pwm_ch);
+    uint32_t width = (uint32_t)(1023*duty);
+    // ３：ledcWrite(チャンネル, PWM値);
+    ledcWrite(pwm_ch, width);
 }
 
 PwmOut& PwmOut::operator = (float duty)
