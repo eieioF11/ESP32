@@ -29,7 +29,6 @@ Trapezoid T(&odm);
 
 void setup()
 {
-	odm.setup(TWOWHEEL);
 	ESPtask_i2c_init = []() {
 		mpu.setup();
 		lider.setup();
@@ -49,6 +48,7 @@ void setup()
 		}
 		ct++;
 	};		   //i2cを使用するものをsensor_interval[ms]ごとに実行
+	odm.setup(TWOWHEEL);
 	ESPinit(); //ESP32mother Initialize
 	//WebSetup();
 	/*task setup*/
@@ -151,15 +151,18 @@ void movetest(Flag_t *flag)
 	if (flag->Debug)
 	{
 		ESP_SERIAL.print(T.status());
-		ESP_SERIAL.printf("/Vx=%f,Vy=%f,Angler=%f,rpm=%7.3f,rpm=%7.3f/(x=%5.2f,y=%5.2f,angle=%5.2f)\n\r", Vx, Vy, Angular, md[0]->now_val, md[1]->now_val, odm.x(), odm.y(), odm.wyaw());
+		ESP_SERIAL.printf("/Vx=%f,Vy=%f,Angler=%f,rpm=%7.3f,rpm=%7.3f/(x=%5.2f,y=%5.2f,angle=%5.2f)\n\r", Vx, Vy, Angular, md[0]->now_val, md[1]->now_val, odm.x(ODOM_mm), odm.y(ODOM_mm), odm.wyaw());
 	}
 	if (ESP32M.EMARGENCYSTOP())
 		return;
 	switch (flag->SerialData)
 	{
-	case 's':
-		st = true;
-		break;
+        case 'w':Vy+=0.1;break;
+        case 's':Vy-=0.1;break;
+        case 'a':Angular+=0.1;break;
+        case 'd':Angular-=0.1;break;
+		case 'S':st = true;break;
+		case 'r':odm.reset();break;
 	}
 	if (st)
 	{
@@ -168,7 +171,7 @@ void movetest(Flag_t *flag)
 		//if(T.movepoint(100.0*m,-100.0*m,0.02))
 		//st=false;
 	}
-	T.update(&Vx, &Vy, &Angular);
+	//T.update(&Vx, &Vy, &Angular);
 	wheel->Move(Vy, Vx, Angular);
 }
 
