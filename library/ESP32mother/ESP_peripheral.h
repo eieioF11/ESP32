@@ -40,7 +40,8 @@ extern Chattering STARTSWITCH;
 //Undercarriage
 extern MD *md[2];
 extern MoveBase *wheel;
-
+//
+extern bool sensor_ini;
 //Task
 void enctask(void *arg);
 void Odmetryupdate(void *arg);

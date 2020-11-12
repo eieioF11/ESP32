@@ -68,6 +68,7 @@ fptr_vv_t ESPtask_i2c_while = [](){};
 
 void ESPtask_i2c(void *arg)
 {
+    sensor_ini=true;
     pinMode(ESP_SDA,PULLUP);
     pinMode(ESP_SCL,PULLUP);
     Wire.begin(ESP_SDA,ESP_SCL,400000);
@@ -76,6 +77,7 @@ void ESPtask_i2c(void *arg)
     portTickType lt = xTaskGetTickCount();
     while(1)
     {
+        sensor_ini=false;
         vTaskDelayUntil(&lt, (sensor_interval*100)/portTICK_RATE_MS);
         if(!OTAFLAG)
             ESPtask_i2c_while();
@@ -353,7 +355,7 @@ int ESP32Mather::setup()
     tasksel=STARTTASK;
     /*end*/
     run.flag.Start=true;
-    ESP_SERIAL.printf("ESP:Finish Initialization!\n");
+    ESP_SERIAL.printf("ESP:Finish Initialization!\n\r");
     tone(beep,246);
     delay(100);
     noTone(beep);

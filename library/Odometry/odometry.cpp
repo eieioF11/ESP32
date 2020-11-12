@@ -21,6 +21,29 @@ void Odometry::setup(odmmode mode)
     kalmanZ.setAngle(0); // Set starting angle
     kalmanYaw.setAngle(0);// Set starting angle
 }
+bool Odometry::zeroset(int n)
+{
+    static int i=0;
+    //Update time calculation
+    dt=update_time();
+    //Posture calculation
+    update_posture(dt);
+    //Zero point setting
+	ini_Pitch+=Pitch;
+	ini_Roll+=Roll;
+	ini_Yaw+=Yaw;
+    if(i>n)
+    {
+        ini_Pitch/=i;
+        ini_Roll/=i;
+        ini_Yaw/=i;
+        printf("ini(%f,%f,%f)\n\r",ini_Pitch,ini_Roll,ini_Yaw);
+        i=0;
+        return false;
+    }
+    i++;
+    return true;
+}
 void Odometry::setposture(float Pitch,float Roll,float Yaw)
 {
     this->Pitch=Pitch;
@@ -102,6 +125,7 @@ void Odometry::update_posture(float dt)
     }
     else if(sensor==sixaxis)//6-axis sensor
     {
+        static float preval = 0.0;
         Accelposture();
         //カルマンフィルタでジャイロセンサーのドリフト誤差補正
         Roll  = kalmanX.getAngle((float)ARoll,gx, dt);
@@ -113,12 +137,17 @@ void Odometry::update_posture(float dt)
         preval = gz;
     }
 }
+float Odometry::update_time()
+{
+    nowtime=micros();
+    float dt=(nowtime-oldtime)*1.0E-6;
+    oldtime=nowtime;
+    return dt;
+}
 void Odometry::update()
 {
-    //Posture calculation
-    nowtime=micros();
     //Update time calculation
-    dt=(nowtime-oldtime)*1.0E-6;
+    dt=update_time();
     //Coordinate calculation
     //Mem
     //v=r*w  v[m/s] r[m] w[rad/s]
@@ -159,10 +188,9 @@ void Odometry::update()
             rc+=(ODOM_R/(4.0f*(b+a)))*(w[1]-w[0]-w[2]+w[3]);
             break;
     }
-
-    //姿勢算出
+    //Posture calculation
     update_posture(dt);
-    //座標算出
+    //Field coordinate calculation
     if(mode!=TWOWHEEL&&mode!=NONE)
     {
         //Convert to field coordinates
@@ -170,28 +198,34 @@ void Odometry::update()
         float cosc=cosf(rc*DEG_TO_RAD);
         X+=rx*cosc-ry*sinc;
         Y+=ry*cosc+rx*sinc;
-        //wYaw=rc*RAD_TO_DEG;
     }
     else if(mode==TWOWHEEL)
     {
-        rc=kalmanYaw.getAngle((float)Yaw,W,dt);
+        //rc=kalmanYaw.getAngle((float)yaw(),W,dt);
+        rc=0;
         X+=rx*cosf(rc*DEG_TO_RAD)*dt;
         Y+=ry*sinf(rc*DEG_TO_RAD)*dt;
     }
     wYaw=rc;
-    oldtime=nowtime;
-
 }
 void Odometry::reset()
 {
+    //posture
     Pitch=0.0f;
     Roll=0.0f;
     Yaw=0.0f;
     Aroll=0.f;
     Apitch=0.f;
     Ayaw=0.f;
+    //coordinates
+    wYaw=0.0f;
+    X=0.0f;
+    Y=0.0f;
+    //time
     nowtime=0ul;
     oldtime=0ul;
+    dt=0.0f;
+    //speed
     w[0]=0.0f;
     w[1]=0.0f;
     w[2]=0.0f;
@@ -199,8 +233,4 @@ void Odometry::reset()
     rx=0.0f;
     ry=0.0f;
     rc=0.0f;
-    wYaw=0.0f;
-    X=0.0f;
-    Y=0.0f;
-    dt=0.0f;
 }

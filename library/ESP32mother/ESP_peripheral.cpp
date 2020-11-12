@@ -12,6 +12,8 @@ Chattering STARTSWITCH(3,120);
 MD *md[2];
 MoveBase *wheel;
 
+bool sensor_ini=true;
+
 void motorsetup()
 {
     #if (MOTORMODE ==PID_M)
@@ -45,6 +47,19 @@ void enctask(void *arg)
 /*Odmetry*/
 void Odmetryupdate(void *arg)
 {
+    printf("sensor init");
+    while(sensor_ini)
+    {
+        printf(".");
+        delay(50);
+    }
+    printf("\n\rsensor init finish!\n\r");
+    while(odm.zeroset(500))
+	{
+		odm.setnineaxis(mpu.read(AccX),mpu.read(AccY),mpu.read(AccZ),mpu.read(GyroX),mpu.read(GyroY),mpu.read(GyroZ),mpu.read(MagX),mpu.read(MagY),mpu.read(MagZ));
+        delay(1);
+	}
+    odm.setup(TWOWHEEL);
     portTickType lt = xTaskGetTickCount();
     while(1)
     {

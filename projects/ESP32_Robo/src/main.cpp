@@ -48,14 +48,13 @@ void setup()
 		}
 		ct++;
 	};		   //i2cを使用するものをsensor_interval[ms]ごとに実行
-	odm.setup(TWOWHEEL);
 	ESPinit(); //ESP32mother Initialize
 	//WebSetup();
 	/*task setup*/
-	ESP32M.setfunction("Linetrace", Linetrace);
-	ESP32M.setfunction("angletest", angletest);
+	//ESP32M.setfunction("Linetrace", Linetrace);
 	ESP32M.setfunction("movetest", movetest);
-	ESP32M.setfunction("lidertest", Lidertest);
+	//ESP32M.setfunction("angletest", angletest);
+	//ESP32M.setfunction("lidertest", Lidertest);
 	//ESP32M.setfunction("Webtest", Webtest);
 
 	acorrX.setup(0);
@@ -79,6 +78,7 @@ void Linetrace(Flag_t *flag) //23~70
         flag->Melody = true;
         flag->SerialMonitor = true;
         flag->Start=false;
+		Vx=Vy=Angular=0;
     }
 	const float lv = 38.0;
 	const float lv2 = 50.0;
@@ -111,6 +111,7 @@ void angletest(Flag_t *flag)
         flag->Melody = true;
         flag->SerialMonitor = true;
         flag->Start=false;
+		Vx=Vy=Angular=0;
     }
 	switch (flag->SerialData)
 	{
@@ -143,18 +144,20 @@ void movetest(Flag_t *flag)
 {
     if(flag->Start)
     {
-        flag->Melody = true;
+        flag->Melody = false;
         flag->SerialMonitor = true;
         flag->Start=false;
+		Vx=Vy=Angular=0;
     }
 	static bool st = false;
 	if (flag->Debug)
 	{
 		ESP_SERIAL.print(T.status());
-		ESP_SERIAL.printf("/Vx=%f,Vy=%f,Angler=%f,rpm=%7.3f,rpm=%7.3f/(x=%5.2f,y=%5.2f,angle=%5.2f)\n\r", Vx, Vy, Angular, md[0]->now_val, md[1]->now_val, odm.x(ODOM_mm), odm.y(ODOM_mm), odm.wyaw());
+		ESP_SERIAL.printf("/Vx=%f,Vy=%f,Angler=%f,rpm=%7.3f,rpm=%7.3f/(x=%5.2f,y=%5.2f,angle=%5.2f)/roll=%5.2f/pitch=%5.2f/yaw=%5.2f/\n\r", Vx, Vy, Angular, md[0]->now_val, md[1]->now_val, odm.x(ODOM_mm), odm.y(ODOM_mm), odm.wyaw(),odm.roll(),odm.pitch(),odm.yaw());
 	}
 	if (ESP32M.EMARGENCYSTOP())
 		return;
+	if(!mount())st = true;
 	switch (flag->SerialData)
 	{
         case 'w':Vy+=0.1;break;
@@ -166,12 +169,12 @@ void movetest(Flag_t *flag)
 	}
 	if (st)
 	{
-		if (T.turn(-90, 0.02))
-			st = false;
-		//if(T.movepoint(100.0*m,-100.0*m,0.02))
-		//st=false;
+		//if (T.turn(-90, 0.02))
+			//st = false;
+		if(T.movepoint(300.0*ODOM_m,0.0*ODOM_m,0.1,1))
+			st=false;
 	}
-	//T.update(&Vx, &Vy, &Angular);
+	T.update(&Vx, &Vy, &Angular);
 	wheel->Move(Vy, Vx, Angular);
 }
 
@@ -187,6 +190,7 @@ void Lidertest(Flag_t *flag)
         flag->SerialMonitor = false;
 		ESP32M.Start();
         flag->Start=false;
+		Vx=Vy=Angular=0;
     }
 	else
 	{

@@ -50,50 +50,53 @@ typedef enum
 class Odometry
 {
 	private:
+		//Filter
 		Kalman kalmanX;
 		Kalman kalmanY;
 		Kalman kalmanZ;
 		Kalman kalmanYaw;
-
-		unsigned long nowtime, oldtime;
-		float ax, ay, az;
-		float gx, gy, gz;
-		float mx, my, mz;
-		uint8_t sensor;
-
-		float Pitch;
-		float Roll;
-		float Yaw;
-
 		LowpassFilter ARoll;
 		LowpassFilter APitch;
 		LowpassFilter AYaw;
-
-		//Posture angle from accelerometer and magnetic sensor
-		float Aroll;
-		float Apitch;
-		float Ayaw;
-
-		float preval = 0.0;
-
+		//Sensor  value
+		float ax, ay, az;
+		float gx, gy, gz;
+		float mx, my, mz;
+		float w[4]; //[rad/s]
+		float W;
+		//coordinates
 		float X;
 		float Y;
 		float wYaw;		  //wheel yaw
 		float rx, ry, rc; //Robot coordinates rx[mm],ry[mm],rc[rad]
-
-		float w[4]; //[rad/s]
-		float W;
-
+		//Posture
+		float Pitch;
+		float Roll;
+		float Yaw;
+		float ini_Pitch;
+		float ini_Roll;
+		float ini_Yaw;
+		//Posture angle from accelerometer and magnetic sensor
+		float Aroll;
+		float Apitch;
+		float Ayaw;
+		//Time
+		float dt;
+		unsigned long nowtime, oldtime;
+		//mode
 		odmmode mode;
+		uint8_t sensor;
+		//Function
 		void Accelposture();
 		void Magposture();
 		void update_posture(float dt);
-		float dt;
-
+		float update_time();
 	public:
 		Odometry();
 		//Setup
 		void setup(odmmode);
+		bool zeroset(int n=10);//Zero point setting
+		//Set value
 		void setposture(float Pitch, float Roll, float Yaw);														//[deg] Execute with update () function
 		void setnineaxis(float ax, float ay, float az, float gx, float gy, float gz, float mx, float my, float mz); //ax,ay,az[G] gx,gy,gz[deg/s] mx,my,mz[mGauss] Execute with update () function
 		void setsixaxis(float ax, float ay, float az, float gx, float gy, float gz);								//ax,ay,az[G] gx,gy,gz[deg/s] Execute with update () function
@@ -105,15 +108,15 @@ class Odometry
 		//Posture
 		inline float pitch(float unit = ODOM_DEG)
 		{
-			return Pitch * unit;
+			return (Pitch-ini_Pitch) * unit;
 		}
 		inline float roll(float unit = ODOM_DEG)
 		{
-			return Roll * unit;
+			return (Roll-ini_Roll) * unit;
 		}
 		inline float yaw(float unit = ODOM_DEG)
 		{
-			return Yaw * unit;
+			return (Yaw-ini_Yaw) * unit;
 		}
 		//Coordinate
 		inline float x(float unit = ODOM_mm)
@@ -141,12 +144,12 @@ class Odometry
 		{
 			return sqrtf(rx * ry) * unit;
 		}
-
+		//Other
 		inline odmmode Mode()
 		{
 			return mode;
 		}
-		inline float DeltaT()
+		inline float DeltaT()//Minute time(Update interval)
 		{
 			return dt;
 		}
