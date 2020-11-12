@@ -32,14 +32,23 @@ void PID::setoutput(float Min,float Max)
   this->Min=Min;
   this->Max=Max;
 }
-float PID::output(float r,float y)
+float PID::output(float r, float y)
+{
+    float pid=output(r,y,this->dt);
+    return pid;
+}
+
+float PID::output(float r, float y,float dt)
 {
     past = deviation;
-    deviation = r - y;                          //偏差
-    integral += ((past + deviation)/2)*dt;      //積分
-    float differential = (deviation - past)/dt; //微分
-    float pid = Kp*deviation + Ki*integral + Kd*differential;
-    if(pid>Max)pid = Max; if(pid<Min)pid = Min;
+    deviation = r - y;                            //偏差
+    integral += ((past + deviation) / 2) * dt;    //積分
+    float differential = (deviation - past) / dt; //微分
+    float pid = Kp * deviation + Ki * integral + Kd * differential;
+    if (pid > Max)
+        pid = Max;
+    if (pid < Min)
+        pid = Min;
     return pid;
 }
 void PID::reset()
