@@ -153,7 +153,8 @@ void movetest(Flag_t *flag)
 	if (flag->Debug)
 	{
 		ESP_SERIAL.print(T.status());
-		ESP_SERIAL.printf("/Vx=%f,Vy=%f,Angler=%f,rpm=%7.3f,rpm=%7.3f/(x=%5.2f,y=%5.2f,angle=%5.2f)/roll=%5.2f/pitch=%5.2f/yaw=%5.2f/\n\r", Vx, Vy, Angular, md[0]->now_val, md[1]->now_val, odm.x(ODOM_mm), odm.y(ODOM_mm), odm.wyaw(),odm.roll(),odm.pitch(),odm.yaw());
+		//ESP_SERIAL.printf("/Vx=%f,Vy=%f,Angler=%f,rpm=%7.3f,rpm=%7.3f/(x=%5.2f,y=%5.2f,angle=%5.2f)/roll=%5.2f/pitch=%5.2f/yaw=%5.2f/\n\r", Vx, Vy, Angular, md[0]->now_val, md[1]->now_val, odm.x(ODOM_mm), odm.y(ODOM_mm), odm.wyaw(),odm.roll(),odm.pitch(),odm.yaw());
+		ESP_SERIAL.printf("/Vx=%f,Vy=%f,Angler=%f,rpm=%7.3f,rpm=%7.3f/(x=%5.2f,y=%5.2f,angle=%5.2f)\n\r", Vx, Vy, Angular, md[0]->now_val, md[1]->now_val, odm.x(ODOM_mm), odm.y(ODOM_mm), odm.wyaw());
 	}
 	if (ESP32M.EMARGENCYSTOP())
 		return;
@@ -169,12 +170,12 @@ void movetest(Flag_t *flag)
 	}
 	if (st)
 	{
-		//if (T.turn(-90, 0.02))
+		//if (T.turn(-90,0.1))
 			//st = false;
-		if(T.movepoint(300.0*ODOM_m,0.0*ODOM_m,0.1,1))
+		if(T.movepoint(300.0*ODOM_m,-200.0*ODOM_m,0.1))
 			st=false;
+		T.update(&Vx, &Vy, &Angular);
 	}
-	T.update(&Vx, &Vy, &Angular);
 	wheel->Move(Vy, Vx, Angular);
 }
 

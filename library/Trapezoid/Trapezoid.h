@@ -19,7 +19,7 @@ class Trapezoid
         Odometry *odm;
         PID *pid;
 
-        float VX,VY,Angler;
+        float speed;
         float sX,sY,sAngle;//初期位置
         float dis,now_dis;
         float dir;
@@ -29,10 +29,9 @@ class Trapezoid
         uint8_t task;
 
         float dt;
-        float T1,T2,Tnow;//加減速時間、等速移動時間、現在の時間
         float a,v,d3;
         uint8_t step;
-        unsigned long  nowtime,oldtime,oldtime2;
+        unsigned long  nowtime,oldtime;
         inline float squar(float A)//a^2
         {
             return A*A;
@@ -49,8 +48,8 @@ class Trapezoid
         void reset();
         void stop();
         void setgain(float Kp_,float Ki_,float Kd_);
-        bool turn(float angle,float a);//angle[deg] a[m/s^2]
-        bool movepoint(float x,float y,float v,float a);//x,y[m] a[m/s^2]
+        bool turn(float angle,float v,float a=0);//angle[deg] a[m/s^2]
+        bool movepoint(float x,float y,float v,float a=0);//x,y[m] a[m/s^2]
 };
 
 #if defined __cplusplus

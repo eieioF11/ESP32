@@ -7,9 +7,10 @@
 Trapezoid::Trapezoid(Odometry *odm,float dt_)
 {
     this->odm=odm;
-    pid=new PID(10,0.00001,0,-1.0f,1.0f,dt_);
+    pid=new PID(77,3,1,-1.0f,1.0f,dt_);
     ST="STOP";
     pid->reset();
+    dir=1;
 }
 void Trapezoid::setgain(float Kp_,float Ki_,float Kd_)
 {
@@ -24,14 +25,19 @@ void Trapezoid::update(float *Vx,float *Vy,float *Angler)
         nowtime=micros();
         dt=(nowtime-oldtime)*1.0E-6;//微小時間（実行間隔）[sec]
         oldtime=nowtime;
-        now_dis=sqrtf(squar(sY-odm->y(ODOM_m))+squar(sX-odm->x(ODOM_m)));
+        if(task==TURN)
+            now_dis=((odm->wyaw()-sAngle)*M_2_PI*ODOM_L*ODOM_m)/180.0f;
+        else
+            now_dis=sqrtf(squar(sY-odm->y(ODOM_m))+squar(sX-odm->x(ODOM_m)));
+        float v_rps=vtorps(v);
+        float a_rps=a / (2 * M_2_PI *ODOM_R);
         switch(step)
         {
             case 0://加速
-                VY += a / (2 * M_2_PI *ODOM_R);
-                if (abs(VY) >= v || abs(now_dis) >= d3)
+                speed += a_rps;
+                if (abs(speed) >= v_rps || abs(now_dis) >= d3)
                 {
-                    VY=v;
+                    speed=v_rps;
                     step=1;
                 }
                 break;
@@ -43,30 +49,38 @@ void Trapezoid::update(float *Vx,float *Vy,float *Angler)
                 break;
             case 2://減速
                 DIF=pid->output(abs(dis),abs(now_dis),dt);
-                VY = DIF * v;
+                speed = DIF * v_rps;
                 break;
             default:
                 step = 0;
                 break;
         }
-
-        ST="dis="+String(dis)+",now_dir="+String(now_dis)+",d3="+String(d3)+",v="+String(v)+",a="+String(a)+",step"+String(step)+",pid"+String(DIF);//デバッグ用
+        ST="dis="+String(dis)+",now_dir="+String(now_dis)+",d3="+String(d3)+",v="+String(v)+",a="+String(a)+",v[rps]="+String(v_rps)+",a[rps]="+String(a_rps)+"speed[rps]"+String(speed)+",step"+String(step)+",pid"+String(DIF);//デバッグ用
     }
     if(abs(dis-now_dis)<=0.0001)
     {
-        end=true;
-        VX=VY=this->Angler=0;
+        if(task==TURN)
+            tend=true;
+        else
+            end=true;
+        speed=0;
     }
-    *Vx=VX;
-    *Vy=VY;
-    *Angler=this->Angler;
+    if(task!=TURN)
+    {
+        *Vx=0;
+        *Vy=speed;
+        *Angler=0;
+    }
+    else
+    {
+        *Vx=0;
+        *Vy=0;
+        *Angler=speed;
+    }
 }
 void Trapezoid::reset()
 {
-    VX=0.0f;
-    VY=0.0f;
-    Angler=0.0;
-    dir=0.0f;
+    dir=1;
     a=0.0f;
     start=false;
     end=false;
@@ -86,30 +100,29 @@ void Trapezoid::stop()
     reset();
     end=true;
 }
-bool Trapezoid::turn(float angle,float a)
+
+bool Trapezoid::turn(float angle,float v,float a)
 {
     if(!tstart)
     {
         tend=false;
         tstart=true;
-        dir=(angle*M_2_PI*ODOM_L*ODOM_m)/180.0f;
-        d3=dir/3;
-        T1=sqrtf(2*abs(d3)/a);
-        //Vm=a*T1;
-        //T2=abs(d3)/Vm;
-        this->a=a;
+        dis=(angle*M_2_PI*ODOM_L*ODOM_m)/180.0f;
+        d3=abs(dis)/3;
+        dir=dis/abs(dis);
+        this->v=v*dir;
+        this->a=((a!=0)?a:squar(v)/(2*d3))*dir;
         sAngle=odm->wyaw();
-        VX=VY=0.0f;
+        setgain(77,3,1);
         step=0;
-        v=0.0f;
-        oldtime=micros();
+        speed=0;
         task=TURN;
     }
     if(tend)
     {
+        dir=1;
         step=0;
-        oldtime2=oldtime=nowtime=0;
-        T1=T2=d3=dir=Angler=0.0f;
+        oldtime=nowtime=0;
         tstart=false;
         pid->reset();
         ST="STOP";
@@ -131,29 +144,30 @@ bool Trapezoid::movepoint(float x,float y,float v,float a)
         }
         else
         {
-            //float angle=atan2f(y-odm->y(ODOM_m),x-odm->x(ODOM_m))*RAD_TO_DEG;
-            //printf("%f\n\r",angle);
-            //if(turn(angle,a))
-            //{
+            float angle=atan2f(y-odm->y(ODOM_m),x-odm->x(ODOM_m))*RAD_TO_DEG;
+            printf("%f\n\r",angle);
+            if(turn(angle,v,a))
+            {
                 sX=odm->x(ODOM_m);
                 sY=odm->y(ODOM_m);
                 dis=sqrtf(squar(y-odm->y(ODOM_m))+squar(x-odm->x(ODOM_m)));
                 d3=dis/3;
-                this->v=vtorps(v);
-                this->a=vtorps(a);
-                VX=VY=0.0f;
+                this->v=v;
+                this->a=(a!=0)?a:squar(v)/(2*d3);
+                setgain(15,0.1,1);
+                speed=0;
                 step=0;
                 start=true;
                 task=MOVE;
-            //}
+            }
         }
         end=false;
     }
     if(end)
     {
+        dir=1;
         x=0.0f;
         y=0.0f;
-        dir=0.0f;
         start=false;
         pid->reset();
         ST="STOP";
