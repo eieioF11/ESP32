@@ -201,8 +201,9 @@ void Odometry::update()
     }
     else if(mode==TWOWHEEL)
     {
-        //rc=kalmanYaw.getAngle((float)yaw(),W,dt);
-        rc=0;
+        rc+=W*dt*RAD_TO_DEG;
+        //rc=kalmanYaw.getAngle((float)yaw(),W*RAD_TO_DEG,dt);
+        //rc=0;
         X+=rx*cosf(rc*DEG_TO_RAD)*dt;
         Y+=ry*sinf(rc*DEG_TO_RAD)*dt;
     }
