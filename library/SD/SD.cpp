@@ -10,17 +10,18 @@ bool SDcard::begin(gpio_num_t Miso,gpio_num_t Mosi,gpio_num_t Clk,gpio_num_t Cs)
     clk=Clk;
     cs=Cs;
     if(SDCH()==0)end=SDini_SPI();
-    else Serial.println("SDcard is not found ");
+    else Serial.println("\n\rSDcard is not found ");
     Serial.println(end);
     return end;
 }
 void SDcard::begin()
 {
     if(SDCH()==0)SDini_SDMMC();
-    else Serial.println("SDcard is not found");
+    else Serial.println("\n\rSDcard is not found");
 }
 bool SDcard::SDini_SPI()
 {
+    Serial.println();
     Serial.println("---------SD---------");
     Serial.println("Initializing SD card");
     Serial.println("Using SPI peripheral");
@@ -65,6 +66,7 @@ bool SDcard::SDini_SPI()
 }
 void SDcard::SDini_SDMMC()
 {
+    Serial.println();
     Serial.println("---------SD---------");
     Serial.println("Initializing SD card");
     Serial.println("Using SDMMC peripheral");
