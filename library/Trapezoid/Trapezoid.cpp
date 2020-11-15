@@ -113,7 +113,7 @@ bool Trapezoid::turn(float angle,float v,float a)
         this->v=v*dir;
         this->a=((a!=0)?a:squar(v)/(2*d3))*dir;
         sAngle=odm->wyaw();
-        setgain(77,3,1);
+        setgain(77,3,0.1);
         step=0;
         speed=0;
         task=TURN;
@@ -154,7 +154,7 @@ bool Trapezoid::movepoint(float x,float y,float v,float a)
                 d3=dis/3;
                 this->v=v;
                 this->a=(a!=0)?a:squar(v)/(2*d3);
-                setgain(15,0.1,1);
+                setgain(15,0.1,0.1);
                 speed=0;
                 step=0;
                 start=true;

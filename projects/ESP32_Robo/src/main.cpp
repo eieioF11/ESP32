@@ -158,7 +158,11 @@ void movetest(Flag_t *flag)
 	}
 	if (ESP32M.EMARGENCYSTOP())
 		return;
-	if(!mount())st = true;
+	if(!mount())
+	{
+		ESP32M.Start();
+		st = true;
+	}
 	switch (flag->SerialData)
 	{
         case 'w':Vy+=0.1;break;
@@ -170,10 +174,11 @@ void movetest(Flag_t *flag)
 	}
 	if (st)
 	{
-		//if (T.turn(-90,0.1))
-			//st = false;
-		if(T.movepoint(300.0*ODOM_m,-200.0*ODOM_m,0.1))
+		if(T.movepoint(300.0*ODOM_m,300.0*ODOM_m,0.2))
+		{
 			st=false;
+			ESP32M.Start_();
+		}
 		T.update(&Vx, &Vy, &Angular);
 	}
 	wheel->Move(Vy, Vx, Angular);
