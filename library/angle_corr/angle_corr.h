@@ -12,7 +12,8 @@ class Angle_correction:public PID
   public:
     Angle_correction(float Kp_,float Ki_,float Kd_,float Min_,float Max_,float dt_);
     void setup(float angle);
-    double Output(bool reset,float angle);
+    float Output(bool reset,float angle);
+    float Output(bool reset,float angle,float dt);
 };
 #if defined __cplusplus
 }

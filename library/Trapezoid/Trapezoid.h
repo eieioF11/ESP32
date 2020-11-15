@@ -6,6 +6,7 @@
 #include "odometry.h"
 #include "MD.h"
 #include "MoveBase.h"
+#include "angle_corr.h"
 #include "PID.h"
 #include "Setup.h"
 
@@ -18,15 +19,16 @@ class Trapezoid
     private:
         Odometry *odm;
         PID *pid;
+        Angle_correction *acorrZ;
 
         float speed;
         float sX,sY,sAngle;//初期位置
-        float dis,now_dis;
-        float dir;
+        float dis,now_dis;//現在位置
+        float dir;//方向
 
-        bool start,tstart;
-        bool end,tend;
-        uint8_t task;
+        bool start,tstart;//スタートフラグ
+        bool end,tend;//終了フラグ
+        uint8_t task;//実行中のタスク
 
         float dt;
         float a,v,d3;

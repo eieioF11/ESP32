@@ -8,7 +8,7 @@ void Angle_correction::setup(float angle)
   anglemem=angle;
   reset();
 }
-double Angle_correction::Output(bool reset,float angle)
+float Angle_correction::Output(bool reset,float angle)
 {
   double out=0;
   if(reset)
@@ -21,3 +21,17 @@ double Angle_correction::Output(bool reset,float angle)
   }
   return out;
 }
+float Angle_correction::Output(bool reset,float angle,float dt)
+{
+  double out=0;
+  if(reset)
+  {
+    setup(angle);
+  }
+  else
+  {
+    out=output(anglemem,angle,dt);
+  }
+  return out;
+}
+
