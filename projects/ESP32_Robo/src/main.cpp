@@ -174,7 +174,7 @@ void movetest(Flag_t *flag)
 	}
 	if (st)
 	{
-		if(T.movepoint(300.0*ODOM_m,300.0*ODOM_m,0.2))
+		if(T.movepoint(500.0*ODOM_m,500.0*ODOM_m,0.2))
 		{
 			st=false;
 			ESP32M.Start_();

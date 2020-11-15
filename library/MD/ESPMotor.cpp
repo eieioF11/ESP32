@@ -5,9 +5,9 @@ ESPMotor::ESPMotor(int pin1_,int pin2_,gpio_num_t sp,int A,int B,int resolution_
   t=new TB6612FNG(pin1_,pin2_,sp);
   e=new Encoder(A,B,resolution_,pcnt_);
   speed=0;
-  Kp=0.04;
-  Ki=0.0002;
-  Kd=0.0001;
+  Kp=0.04;//0.04
+  Ki=0.06;//0.0002
+  Kd=0.01;//0.0001
   pidmd=new PID(Kp,Ki,Kd,-1.0,1.0,dt);
   t->Standby(ON);
   e->Reverse(true);
