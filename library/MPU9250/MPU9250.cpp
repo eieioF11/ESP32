@@ -1,6 +1,13 @@
 #include "MPU9250.h"
 #define samplesize 100
 
+#define MXmin -37.061
+#define MXmax 27.246
+#define MYmin -23.145
+#define MYmax 44.531
+#define MZmin -19.043
+#define MZmax 55.371
+
 MPU9250::MPU9250(){};
 void MPU9250::setup()
 {
@@ -38,11 +45,16 @@ void MPU9250::Offset()
     gXoff /= samplesize;
     gYoff /= samplesize;
     gZoff /= samplesize;
-    /*
-    gXoff -= 0.01;
-    gYoff -= 0.01;
-    gZoff -= 0.01;
-    */
+
+    mXmin=MXmin;
+    mXmax=MXmax;
+    mYmin=MYmin;
+    mYmax=MYmax;
+    mZmin=MZmin;
+    mZmax=MZmax;
+    mXoff=(mXmax-mXmin)/2.f + mXmin;
+    mYoff=(mYmax-mYmin)/2.f + mYmin;
+    mZoff=(mZmax-mZmin)/2.f + mZmin;
 }
 
 void MPU9250::update()
@@ -159,6 +171,8 @@ void MPU9250::print()
     ESP_SERIAL.print(magY-mYoff);
     ESP_SERIAL.print("/mz:");
     ESP_SERIAL.print(magZ-mZoff);
+    //ESP_SERIAL.printf("/M max min/x=(%.3f,%.3f),y=(%.3f,%.3f),z=(%.3f,%.3f)",mXmax,mXmin,mYmax,mYmin,mZmax,mZmin);
+    //ESP_SERIAL.printf("/moff/x=%f,y=%f,z=%f",mXoff,mYoff,mZoff);
     ESP_SERIAL.print("/temp:");
     ESP_SERIAL.print(tempMPU9250);
     ESP_SERIAL.println("/");
@@ -197,15 +211,14 @@ void MPU9250::reset()
     gYoff=0.f;
     gZoff=0.f;
 
-    mXmin = 0.f;
-    mYmin = 0.f;
-    mZmin = 0.f;
+    mXmin=MXmin;
+    mXmax=MXmax;
+    mYmin=MYmin;
+    mYmax=MYmax;
+    mZmin=MZmin;
+    mZmax=MZmax;
 
-    mXmax = 0.f;
-    mYmax = 0.f;
-    mZmax = 0.f;
-
-    mXoff = 0.f;//磁気センサから求めた角速度offset
-    mYoff = 0.f;//磁気センサから求めた角速度offset
-    mZoff = 0.f;//磁気センサから求めた角速度offset
+    mXoff=(mXmax-mXmin)/2.f + mXmin;//磁気センサから求めた角速度offset
+    mYoff=(mYmax-mYmin)/2.f + mYmin;//磁気センサから求めた角速度offset
+    mZoff=(mZmax-mZmin)/2.f + mZmin;//磁気センサから求めた角速度offset
 }
