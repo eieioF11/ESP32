@@ -19,9 +19,10 @@ ESP-WROOM-32というWifiとBluetooth搭載のマイコンを使用したプロ�
 
 ![設計データ](/image/二輪足回り.png)
 ![コントローラー](/image/コントローラー.jpg)
-![ライントレース](/image/ライントレース.mp4)
-![台形制御](/image/台形制御.mp4)
+![ライントレース](/image/ライントレース.gif)
+![台形制御](/image/台形制御.gif)
 # Mini arm robot
 3Dプリンターとサーボモーター（sg90）で作成した。
 ![設計データ](/image/アーム設計.jpg)
 ![アーム](/image/アーム実物.jpg)
+![アーム動作](/image/アーム動作.gif)
