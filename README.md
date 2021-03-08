@@ -17,9 +17,10 @@ ESP-WROOM-32というWifiとBluetooth搭載のマイコンを使用したプロ�
 # Opposing two wheels
 制御練習用の対向二輪の足回り。専用のコントローラーまたはスマホからコントロールできる。
 
-![設計データ](/image/二輪足回りver2 v6.png)
+![設計データ](/image/二輪足回り.png)
 ![コントローラー](/image/コントローラー.jpg)
 ![ライントレース](/image/ライントレース.mp4)
+![台形制御](/image/台形制御.mp4)
 # Mini arm robot
 3Dプリンターとサーボモーター（sg90）で作成した。
 ![設計データ](/image/アーム設計.jpg)
