@@ -53,7 +53,7 @@ void setup()
 	/*task setup*/
 	//ESP32M.setfunction("Linetrace", Linetrace);
 	ESP32M.setfunction("movetest", movetest);
-	//ESP32M.setfunction("angletest", angletest);
+	ESP32M.setfunction("angletest", angletest);
 	//ESP32M.setfunction("lidertest", Lidertest);
 	//ESP32M.setfunction("Webtest", Webtest);
 

@@ -57,7 +57,8 @@ class Odometry
 		Kalman kalmanYaw;
 		LowpassFilter ARoll;
 		LowpassFilter APitch;
-		LowpassFilter AYaw;
+		//LowpassFilter AYaw;
+		float AYaw;
 		//Sensor  value
 		float ax, ay, az;
 		float gx, gy, gz;

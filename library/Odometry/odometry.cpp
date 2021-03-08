@@ -10,7 +10,7 @@ Odometry::Odometry()
     reset();
     ARoll.begin(0.25);
     APitch.begin(0.25);
-    AYaw.begin(0.25);
+    //AYaw.begin(0.25);
 }
 void Odometry::setup(odmmode mode)
 {
