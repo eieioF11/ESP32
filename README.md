@@ -16,6 +16,7 @@ ESP-WROOM-32というWifiとBluetooth搭載のマイコンを使用したプロ�
   - 筐体制作:Autodesk Fusion360,Inventor
 # Opposing two wheels
 制御練習用の対向二輪の足回り。専用のコントローラーまたはスマホからコントロールできる。
+
 ![設計データ](/image/二輪足回りver2 v6.png)
 ![コントローラー](/image/コントローラー.jpg)
 ![ライントレース](/image/ライントレース.mp4)
