@@ -78,6 +78,7 @@ class ESP32Mather
     public:
         ESP32Mather();
         int setup();
+        int setup_ROS();
         void setfunction(const char*name,void (*tfp)(Flag_t *));
         void update();
         bool EMARGENCYSTOP();

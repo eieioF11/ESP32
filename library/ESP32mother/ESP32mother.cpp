@@ -268,6 +268,78 @@ void OTAsetup()
 ESP32Mather::ESP32Mather()
 {
 }
+int ESP32Mather::setup_ROS()
+{
+    /*UART setup*/
+    //Serial.begin(115200);
+    /*BTSerial Initialize*/
+    #if (ESP_MODE == ESP_BTS)
+    BTSerial.begin(ESP_BTSNAME);
+    #endif
+    /*Digitalpin setup*/
+    pinMode(STBY, OUTPUT);
+    pinMode(SD_CHECK, INPUT);
+    pinMode(SD_MOUNT, INPUT);
+    pinMode(stsw, INPUT_PULLUP);
+    pinMode(StatusLED, OUTPUT);
+    digitalWrite(StatusLED, HIGH);
+    digitalWrite(STBY, LOW);
+    Vmonitor_setup();
+    tone(beep,310);
+    /*Motor Initialize*/
+    motorsetup();
+    /*Wifi Initialize*/
+    #if (ESP_MODE != ESP_PS3)
+    WiFi.mode(WIFI_AP_STA);
+    WiFi.softAP(ESP_SSID, ESP_WIFIPASS);           // SSIDとパスの設定
+    delay(100);                        // 追記：このdelayを入れないと失敗する場合がある
+    WiFi.softAPConfig(ip, ip, subnet); // IPアドレス、ゲートウェイ、サブネットマスクの設定
+    IPAddress myIP = WiFi.softAPIP();
+    udp.begin(LocalPort);  // UDP通信の開始(引数はポート番号)
+    WiFi.setTxPower(WIFI_POWER_MINUS_1dBm);
+    /*OTA Initialize*/
+    #if (ESP_OTAE == 1)
+    OTAsetup();
+    otastatus=" ";
+    #else
+    otastatus="OTA off";
+    #endif
+    #else
+    otastatus="WIFI off";
+    #endif
+    /*Encoder Initialize*/
+    #if (MOTORMODE ==PID_M)
+    ((ESPMotor*)md[0])->Reset();
+    ((ESPMotor*)md[1])->Reset();
+    xTaskCreatePinnedToCore(enctask,"Encoder task",1024,NULL,2,NULL,0);
+    #endif
+    /*SDcard Initialize*/
+    #if (SD == ON)
+    xTaskCreatePinnedToCore(SDlog,"Log task",4048,NULL,1,NULL,1);
+    #endif
+    /*I2CTask Initialize*/
+    #if(I2CPORT == ON)
+    xTaskCreatePinnedToCore(ESPtask_i2c,"I2C task",8096,NULL,3,NULL,0);
+    #endif
+    /*Odmetry update Task Initialize*/
+    #if(I2CPORT == ON && MOTORMODE != DUTY_M)
+    xTaskCreatePinnedToCore(Odmetryupdate,"Odmetry task",8096,NULL,0,NULL,1);
+    #endif
+    /*ROS Initialize*/
+    #if (ROS == ON)
+    xTaskCreatePinnedToCore(ESPROStask,"ROStask",8096,NULL,1,NULL,1);
+    #endif
+    /*melody*/
+    xTaskCreatePinnedToCore(melodytask,"Melody task",1024,NULL,0,NULL,1);
+    tasksel=STARTTASK;
+    /*end*/
+    run.flag.Start=true;
+    tone(beep,246);
+    delay(100);
+    noTone(beep);
+    digitalWrite(StatusLED,LOW);
+    return 0;
+}
 int ESP32Mather::setup()
 {
     /*UART setup*/
@@ -339,11 +411,7 @@ int ESP32Mather::setup()
     ESP_SERIAL.println("ESP:Odmetry task settings");
     xTaskCreatePinnedToCore(Odmetryupdate,"Odmetry task",8096,NULL,0,NULL,1);
     #endif
-    /*ROS Initialize*/
-    #if (ROS == ON)
-    ESP_SERIAL.println("ESP:ROS task settings");
-    xTaskCreatePinnedToCore(ESPROStask,"ROStask",8096,NULL,1,NULL,1);
-    #endif
+
     /*melody*/
     ESP_SERIAL.println("ESP:Melody task settings");
     xTaskCreatePinnedToCore(melodytask,"Melody task",1024,NULL,0,NULL,1);
@@ -385,8 +453,10 @@ void ESP32Mather::update()
     if(OTAFLAG)
         return;
     /*USBSerial*/
+    #if (ROS == OFF)
     run.flag.SerialData=0;
     if(Serial.available())run.flag.SerialData = Serial.read();
+    #endif
     /*wifi udp read*/
     #if (ESP_MODE != ESP_PS3)
     if (udp.parsePacket())run.flag.UDPData=udp.read();
@@ -684,7 +754,11 @@ void ps3task(Flag_t *flag)
 
 void ESPinit()
 {
+    #if (ROS == ON)
+    ESP32M.setup_ROS();
+    #else
     ESP32M.setup();
+    #endif
     /*task setup*/
     #if(DEFAULTTASK == ON)
     #if (MOTORMODE == PID_M)

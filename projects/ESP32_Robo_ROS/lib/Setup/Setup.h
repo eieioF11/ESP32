@@ -15,8 +15,8 @@
 #define STARTTASK       0                //0 setuptask,1 contorollertask
 #define I2CPORT         ON               //using i2c port
 #define SD              ON               //SD card activation
-#define ROS             OFF              //Enable ROS
-#define ROSdatasize     5                //ROS transmission data size [byte]
+#define ROS             ON               //Enable ROS
+#define ROSdatasize     6                //ROS transmission data size [byte]
 #define Delta_T         0.02             //Execution interval[s]
 #define d_interval      0.1              //debug interval[s]
 #define sensor_interval 0.01             //Sensor update interval[s]
