@@ -16,6 +16,7 @@ extern "C" {
 #include <std_msgs/String.h>
 #include "std_msgs/Float32MultiArray.h"
 #include "ESP_Sensor.h"
+
 ros::NodeHandle nh;//ノードのハンドラ宣言
 std_msgs::Float32MultiArray sensor;
 ros::Publisher pub("arduino",&sensor);

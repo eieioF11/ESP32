@@ -28,6 +28,8 @@ kybode comand
 #include "angle_corr.h"
 #include "PID.h"
 
+#include "Trapezoid.h"
+
 #if (SD == ON)
 #include "SD.h"
 #endif
