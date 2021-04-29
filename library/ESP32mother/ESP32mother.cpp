@@ -271,7 +271,7 @@ ESP32Mather::ESP32Mather()
 int ESP32Mather::setup_ROS()
 {
     /*UART setup*/
-    //Serial.begin(115200);
+    Serial.begin(115200);
     /*BTSerial Initialize*/
     #if (ESP_MODE == ESP_BTS)
     BTSerial.begin(ESP_BTSNAME);
@@ -440,7 +440,7 @@ void ESP32Mather::update()
     static bool mflag=false;
     bool sel=false;
     EMS=Emergency_Stop();
-    if((LOWV=LowV())==true)
+    if((LOWV=LowV())==true&&SDCH()==0)
     {
         if(!mflag)
             melodysel=UnmountBeep;
