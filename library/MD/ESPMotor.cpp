@@ -8,7 +8,7 @@ ESPMotor::ESPMotor(int pin1_,int pin2_,gpio_num_t sp,int A,int B,int resolution_
   Kp=0.04;//0.04
   Ki=0.06;//0.0002
   Kd=0.01;//0.0001
-  pidmd=new PID(Kp,Ki,Kd,-1.0,1.0,dt);
+  pidmd=new PID(Kp,Ki,Kd,-0.01,0.01,dt);
   t->Standby(ON);
   e->Reverse(true);
   mode=PID_M;
@@ -35,7 +35,8 @@ void ESPMotor::Move(float val)
   }
   t->Standby(ON);
   if(reverse)val*=-1;
-  if((val>0&&speed<0)||(val<0&&speed>0)){speed=0;pidmd->reset();}
+  //if((val>0&&speed<0)||(val<0&&speed>0)){speed=0;pidmd->reset();}
+  if(fabs(val)<0&&fabs(speed)<0.00001){speed=0;pidmd->reset();}
   speed+=pidmd->output(val,e->get_rps());
   if(speed>1.0)speed=1.0;if(speed<-1.0)speed=-1.0;
   t->move(speed);

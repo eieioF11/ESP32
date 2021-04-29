@@ -57,8 +57,10 @@ inline float Vmonitor()
 {
   int em=1;
   const float VM_RANGE=0.76f;
-  const float R1=2.2*1000;
-  const float R2=1.0*1000;
+  //const float R1=2.2*1000;
+  //const float R2=1.0*1000;
+  const float R1=100*1000;
+  const float R2=24*1000;
   float ADCinV=(((float)analogRead(MOTOR_V)/4095.f)*3.3);
   if(ADCinV<=0.f)
     em=0;
@@ -74,10 +76,13 @@ inline bool LowV()
 
 inline bool Emergency_Stop()
 {
+  /*
   if(Vmonitor()<=3.0f)
     return true;
   else
     return false;
+  */
+  return false;
 }
 
 inline float CPUTemp()
