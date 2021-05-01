@@ -658,16 +658,16 @@ void test(Flag_t *flag)
     switch(mode)
     {
         case 'P':
-            if(flag->SerialData=='.')((ESPMotor*)md[mdc])->Kp+=0.01;
-            if(flag->SerialData==',')((ESPMotor*)md[mdc])->Kp-=0.01;
+            if(flag->SerialData=='.')((ESPMotor*)md[mdc])->Kp+=0.001;
+            if(flag->SerialData==',')((ESPMotor*)md[mdc])->Kp-=0.001;
             break;
         case 'I':
-            if(flag->SerialData=='.')((ESPMotor*)md[mdc])->Ki+=0.0001;
-            if(flag->SerialData==',')((ESPMotor*)md[mdc])->Ki-=0.0001;
+            if(flag->SerialData=='.')((ESPMotor*)md[mdc])->Ki+=0.001;
+            if(flag->SerialData==',')((ESPMotor*)md[mdc])->Ki-=0.001;
             break;
         case 'D':
-            if(flag->SerialData=='.')((ESPMotor*)md[mdc])->Kd+=0.000001;
-            if(flag->SerialData==',')((ESPMotor*)md[mdc])->Kd-=0.000001;
+            if(flag->SerialData=='.')((ESPMotor*)md[mdc])->Kd+=0.001;
+            if(flag->SerialData==',')((ESPMotor*)md[mdc])->Kd-=0.001;
             break;
     }
     #endif
