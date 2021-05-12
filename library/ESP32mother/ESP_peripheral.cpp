@@ -56,6 +56,7 @@ void Odmetryupdate(void *arg)
     printf("\n\rsensor init finish!\n\r");
     while(odm.zeroset(500))
 	{
+        //odm.setsixaxis(mpu.read(AccX),mpu.read(AccY),mpu.read(AccZ),mpu.read(GyroX),mpu.read(GyroY),mpu.read(GyroZ));
 		odm.setnineaxis(mpu.read(AccX),mpu.read(AccY),mpu.read(AccZ),mpu.read(GyroX),mpu.read(GyroY),mpu.read(GyroZ),mpu.read(MagX),mpu.read(MagY),mpu.read(MagZ));
         delay(1);
 	}

@@ -76,13 +76,10 @@ inline bool LowV()
 
 inline bool Emergency_Stop()
 {
-  /*
   if(Vmonitor()<=3.0f)
     return true;
   else
     return false;
-  */
-  return false;
 }
 
 inline float CPUTemp()
