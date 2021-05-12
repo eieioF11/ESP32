@@ -35,8 +35,12 @@ void ESPMotor::Move(float val)
   }
   t->Standby(ON);
   if(reverse)val*=-1;
-  //if((val>0&&speed<0)||(val<0&&speed>0)){speed=0;pidmd->reset();}
-  if(fabs(val)<0&&fabs(speed)<0.001){speed=0;pidmd->reset();}
+  if(fabs(val)<=0.0f&&fabs(speed)<=0.06)
+  {
+    speed=0.f;
+    pidmd->reset();
+    e->reset();
+  }
   speed+=pidmd->output(val,e->get_rps());
   if(speed>1.0)speed=1.0;if(speed<-1.0)speed=-1.0;
   t->move(speed);
