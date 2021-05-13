@@ -64,7 +64,7 @@ class Odometry
 		float gx, gy, gz;
 		float mx, my, mz;
 		float w[4]; //[rad/s]
-		float W;
+		float W,angular;
 		//coordinates
 		float X;
 		float Y;
@@ -140,6 +140,10 @@ class Odometry
 		inline float Ry(float unit = ODOM_mm)
 		{
 			return ry * unit;
+		}
+		inline float Angular(float unit = ODOM_DEG)
+		{
+			return angular * unit;
 		}
 		inline float V(float unit = ODOM_m)
 		{

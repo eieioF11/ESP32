@@ -41,11 +41,12 @@ void Main(Flag_t *flag)
         flag->Start=false;
 		Vx=Vy=Angular=0;
     }
+	//printf("%f[v],%f,%f,%f\n\r",Vmonitor(),odm.x(ODOM_m),odm.y(ODOM_m),odm.wyaw());
 	ROS_EMARGENCYSTOP=(bool)ESP32M.EMARGENCYSTOP();
 	if (ROS_EMARGENCYSTOP)
 		return;
-	Vy = T.vtorps(Tw_Vy);
-	Vx = T.vtorps(Tw_Vx);
-	Angular = T.vtorps(Tw_Angular);
+	Vy = (float)Tw_Vy;
+	Vx = (float)Tw_Vx;
+	Angular = (float)Tw_Angular;
 	wheel->Move(Vx, Vy, Angular);
 }

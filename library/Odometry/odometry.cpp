@@ -172,12 +172,14 @@ void Odometry::update()
         case OMUNI3:
             rx=ODOM_R*(w[0]*cosf(5.0f*PI/12)+w[1]*cosf(PI/4.0f)-w[2]*cosf(PI/12.0f));
             ry=ODOM_R*(-w[0]*sinf(5.0f*PI/12)+w[1]*sinf(PI/4.0f)+w[2]*sinf(PI/12.0f));
-            rc+=(-ODOM_R/(3.0f*ODOM_L))*(w[0]+w[1]+w[2]);
+            angular=(-ODOM_R/(3.0f*ODOM_L))*(w[0]+w[1]+w[2]);
+            rc+=angular;
             break;
         case OMUNI4:
             rx=ODOM_R*(w[3]-w[1]);
             ry=ODOM_R*(w[0]-w[2]);
-            rc+=(ODOM_R/(4.0f*ODOM_L))*(w[0]+w[1]+w[2]+w[3]);
+            angular=(ODOM_R / (4.0f * ODOM_L)) * (w[0] + w[1] + w[2] + w[3]);
+            rc+=angular;
             break;
         case MECANUM4:
             float a=ODOM_A/2.0f;
@@ -185,7 +187,8 @@ void Odometry::update()
 
             rx=(ODOM_R/4.0f)*(w[0]+w[1]+w[2]+w[3]);
             ry=(ODOM_R/4.0f)*(w[0]-w[1]-w[2]+w[3]);
-            rc+=(ODOM_R/(4.0f*(b+a)))*(w[1]-w[0]-w[2]+w[3]);
+            angular=(ODOM_R/(4.0f*(b+a)))*(w[1]-w[0]-w[2]+w[3]);
+            rc+=angular;
             break;
     }
     //Posture calculation
@@ -201,7 +204,8 @@ void Odometry::update()
     }
     else if(mode==TWOWHEEL)
     {
-        rc+=W*dt*RAD_TO_DEG;
+        angular=W*dt*RAD_TO_DEG;
+        rc+=angular;
         //rc=kalmanYaw.getAngle((float)yaw(),W*RAD_TO_DEG,dt);
         //rc=0;
         X+=rx*cosf(rc*DEG_TO_RAD)*dt;
