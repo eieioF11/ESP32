@@ -5,11 +5,17 @@
 ros::NodeHandle nh; //ノードのハンドラ宣言
 geometry_msgs::TransformStamped t;
 tf::TransformBroadcaster broadcaster;
+nav_msgs::Odometry odom;
+ros::Publisher odom_pub("odom",&odom);
 
-float Tw_Vx = 0.0;
+Speed Tw_Vx(Speed_V,ODOM_R*ODOM_m);
+Speed Tw_Vy(Speed_V,ODOM_R*ODOM_m);
+Speed Tw_Angular(Speed_W,ODOM_R*ODOM_m);
+/*float Tw_Vx = 0.0;
 float Tw_Vy = 0.0;
-float Tw_Angular = 0.0;
+float Tw_Angular = 0.0;*/
 bool ROS_EMARGENCYSTOP = false;
+
 void messageCb(const geometry_msgs::Twist &twist) //Twistを受け取ったら呼び出される関数
 {
     const float linear_x = twist.linear.x;
@@ -45,26 +51,45 @@ void ESPROStask(void *arg)
     nh.getHardware()->setBaud(115200); //通信速度を115200に設定
     nh.initNode();                     //ノードの初期化
     nh.subscribe(sub);
+    nh.advertise(odom_pub);
     broadcaster.init(nh);
     portTickType lt = xTaskGetTickCount();
     while (1)
     {
         double q0,q1,q2,q3;
-        EulerAnglesToQuaternion(odm.roll(ODOM_RAD),odm.pitch(ODOM_RAD),odm.wyaw(ODOM_RAD),q0,q1,q2,q3);
-        t.header.frame_id = "/odom";
-        t.child_frame_id = "/base_link";
+        EulerAnglesToQuaternion(-1*odm.roll(ODOM_RAD),-1*odm.pitch(ODOM_RAD),odm.wyaw(ODOM_RAD),q0,q1,q2,q3);
+        geometry_msgs::Quaternion odom_quat;
+        odom_quat.w=q0;
+        odom_quat.x=q1;
+        odom_quat.y=q2;
+        odom_quat.z=q3;
+        t.header.frame_id = "odom";
+        t.child_frame_id = "base_link";
         t.transform.translation.x = odm.x(ODOM_m);
         t.transform.translation.y = odm.y(ODOM_m);
         t.transform.translation.z = 0.0;
-
-        t.transform.rotation.x = q1;
-        t.transform.rotation.y = q2;
-        t.transform.rotation.z = q3;
-        t.transform.rotation.w = q0;
+        //t.transform.rotation = tf::createQuaternionFromYaw(odm.wyaw(ODOM_RAD));
+        t.transform.rotation = odom_quat;
         t.header.stamp = nh.now();
         broadcaster.sendTransform(t);
+
+        //set the position
+        odom.header.stamp = nh.now();
+        odom.header.frame_id = "odom";
+        odom.pose.pose.position.x = odm.x(ODOM_m);
+        odom.pose.pose.position.y = odm.y(ODOM_m);
+        odom.pose.pose.position.z = 0.0;
+        //odom.pose.pose.orientation = tf::createQuaternionFromYaw(odm.wyaw(ODOM_RAD));
+        odom.pose.pose.orientation = odom_quat;
+        //set the velocity
+        odom.child_frame_id = "base_link";
+        odom.twist.twist.linear.x = odm.Rx(ODOM_m);
+        odom.twist.twist.linear.y = 0;
+        odom.twist.twist.angular.z = odm.Angular(ODOM_RAD);
+        odom_pub.publish(&odom);
+
         nh.spinOnce();
-        vTaskDelayUntil(&lt, 10 / portTICK_RATE_MS);
+        vTaskDelayUntil(&lt, 100 / portTICK_RATE_MS);
     }
 }
 #endif
