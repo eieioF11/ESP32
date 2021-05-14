@@ -42,6 +42,8 @@ bool errorbeep();
 bool startbeep();
 #define XPStartBeep 25
 bool winxpstartbeep();
+#define BTErrorBeep 26
+bool BTerrorbeep();
 
 void melreset();
 

@@ -22,6 +22,11 @@
 #include "lowpassfilter.h"
 #include "Chattering.h"
 
+//電源パラメーター
+#define PowerV_Max 10.5f //Battery voltage(NIMH x 8 = 10.5[v])
+#define PowerV_Min 7.0f
+#define LowLevel   60.0f
+
 #if defined __cplusplus
 extern "C" {
 #endif
@@ -67,6 +72,19 @@ inline float Vmonitor()
   float MPV=ADCinV*((R1+R2)/R2)+(VM_RANGE*em);
   return MPV;
 }
+
+inline float BatteryLevel()
+{
+  float level=0.f;
+  float BTV=Vmonitor();
+  if(BTV>PowerV_Max)
+    BTV=PowerV_Max;
+  if(BTV<PowerV_Min)
+    BTV=PowerV_Min;
+  level=mapfloat(BTV,PowerV_Min,PowerV_Max,0,100);
+  return level;
+}
+
 inline bool LowV()
 {
   if(Vmonitor()<=4.7f&&Vmonitor()>=3.0)
@@ -81,6 +99,7 @@ inline bool Emergency_Stop()
   else
     return false;
 }
+
 
 inline float CPUTemp()
 {

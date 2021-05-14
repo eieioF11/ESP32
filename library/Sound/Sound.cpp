@@ -339,3 +339,36 @@ bool winxpstartbeep()
     c++;
     return end;
 }
+
+bool BTerrorbeep()
+{
+    const char mel[4]={'B',0,'B',0};
+    const int t[4]={2,10,2,10};
+    bool end=false;
+    if(c<10*t[mc])
+    {
+        if(c1==false)
+        {
+            switch(mel[mc])
+            {
+                case 'B':tone(beep,B_(5));break;
+                default:noTone(beep);break;
+            }
+            c1=true;
+        }
+    }
+    else
+    {
+        noTone(beep);
+        mc++;
+        if(mc>3)
+        {
+            mc=0;
+            end=true;
+        }
+        c=0;
+        c1=false;
+    }
+    c++;
+    return end;
+}

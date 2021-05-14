@@ -41,8 +41,12 @@ void Main(Flag_t *flag)
         flag->Start=false;
 		Vx=Vy=Angular=0;
     }
+	float BTL=BatteryLevel();
 	//printf("%f[v],%f,%f,%f\n\r",Vmonitor(),odm.x(ODOM_m),odm.y(ODOM_m),odm.wyaw());
+	printf("%f[v],%f[%]\n\r",Vmonitor(),BTL);
 	ROS_EMARGENCYSTOP=(bool)ESP32M.EMARGENCYSTOP();
+	if(BTL<LowLevel&&BTL!=0.f)
+		ESP32M.BTError();
 	if (ROS_EMARGENCYSTOP)
 		return;
 	Vy = (float)Tw_Vy;

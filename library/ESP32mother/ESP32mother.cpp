@@ -43,6 +43,7 @@ void melodytask(void *arg)
                 case ErrorBeep:if(errorbeep())melodysel=0;break;
                 case StartBeep:if(startbeep())melodysel=0;break;
                 case XPStartBeep:if(winxpstartbeep())melodysel=0;break;
+                case BTErrorBeep:if(BTerrorbeep())melodysel=0;break;
                 case Onbeep-1:
                 default:melodysel=0;break;
             }
@@ -572,6 +573,11 @@ void ESP32Mather::update()
     }
     #endif
     delay(Delta_T*100);//Execution interval
+}
+
+void ESP32Mather::BTError()
+{
+    melodysel=BTErrorBeep;
 }
 
 void ESP32Mather::Error()

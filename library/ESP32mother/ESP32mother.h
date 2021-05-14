@@ -82,6 +82,7 @@ class ESP32Mather
         void setfunction(const char*name,void (*tfp)(Flag_t *));
         void update();
         bool EMARGENCYSTOP();
+        void BTError();
         void Error();
         void Start();
         void Start_();
