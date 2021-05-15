@@ -4,7 +4,7 @@
 #include <Arduino.h>
 
 //User Settings------------------------------------
-#define ESP_MODE        ESP_NONE         //ESP_PS3:PS3 ESP_BTS: BluetoothSerial, ESP_NONE: NONE
+#define ESP_MODE        ESP_PS3          //ESP_PS3:PS3 ESP_BTS: BluetoothSerial, ESP_NONE: NONE
 #define ESP_OTA         OFF              //Enable OTA(ON/OFF)
 #define ESP_SSID        "ESP32ROBO"      //Set SSID for OTA
 #define ESP_WIFIPASS    "roborobo"       //Set password for wifi

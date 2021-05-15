@@ -179,6 +179,46 @@ bool PS3Controller(float *Vx,float *Vy,float *Angular,bool stick)
     }
     return b;
 }
+bool PS3ControllerTw(float *Vx,float *Vy,float *Angular,bool stick)
+{
+    bool b=false;
+    PS3Debug="";
+    for(int i=0;i<16;i++)
+    {
+        switch((int)PS3button&1ull<<i)//0b/select/start/l3/r3/l1/r1/l2/r2/up/down/right/left/△/〇/×/□/
+        {
+            case 0b1000000000000000:St.addprintf(&PS3Debug,"select\n");break;
+            case 0b0100000000000000:St.addprintf(&PS3Debug,"start\n");break;
+            case 0b0010000000000000:St.addprintf(&PS3Debug,"l3\n");b=true;break;
+            case 0b0001000000000000:St.addprintf(&PS3Debug,"r3\n");break;
+            case 0b0000100000000000:St.addprintf(&PS3Debug,"l1\n");*Angular=0.5;break;
+            case 0b0000010000000000:St.addprintf(&PS3Debug,"r1\n");*Angular=-0.5;break;
+            case 0b0000001000000000:St.addprintf(&PS3Debug,"l2\n");break;
+            case 0b0000000100000000:St.addprintf(&PS3Debug,"r2\n");break;
+            case 0b0000000010000000:St.addprintf(&PS3Debug,"up\n");*Vx=0.5;break;
+            case 0b0000000001000000:St.addprintf(&PS3Debug,"down\n");*Vx=-0.5;break;
+            case 0b0000000000100000:St.addprintf(&PS3Debug,"right\n");*Angular=-0.5;break;
+            case 0b0000000000010000:St.addprintf(&PS3Debug,"left\n");*Angular=0.5;break;
+            case 0b0000000000001000:St.addprintf(&PS3Debug,"triangle\n");break;
+            case 0b0000000000000100:St.addprintf(&PS3Debug,"circle\n");break;
+            case 0b0000000000000010:St.addprintf(&PS3Debug,"cross\n");break;
+            case 0b0000000000000001:St.addprintf(&PS3Debug,"square\n");break;
+        }
+    }
+    if(!PS3button&&stick)
+    {
+        *Vx = (float(ly)/128.0f)*-1.f;
+        *Angular = ((float(lx)/128.0f)+(float(rx)/128.0f))*-1.f;
+    }
+    else if(!PS3button)
+        *Vx=*Vy=*Angular=0.0f;
+    if(b)
+    {
+        lx=ly=rx=ry=0;
+        *Vx=*Vy=*Angular=0.0f;
+    }
+    return b;
+}
 int8_t PS3stick(ps3stickmode mode)
 {
     switch(mode)

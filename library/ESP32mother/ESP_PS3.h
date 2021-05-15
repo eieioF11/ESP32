@@ -37,6 +37,7 @@ extern String PS3Debug;
 void PS3init();  //setup()で１回実行
 void PS3Update();
 bool PS3Controller(float *Vx,float *Vy,float *Angular,bool stick=true);//-1~1
+bool PS3ControllerTw(float *Vx,float *Vy,float *Angular,bool stick=true);//-1~1
 uint16_t PS3Button();//0b/select/start/l3/r3/l1/r1/l2/r2/up/down/right/left/△/〇/×/□/
 bool PS3PSButton();
 int8_t PS3stick(ps3stickmode mode);
