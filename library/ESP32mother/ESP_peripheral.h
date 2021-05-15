@@ -75,6 +75,10 @@ inline float Vmonitor()
 
 inline float BatteryLevel()
 {
+  const float n=10;
+  static float sum=0.0f;
+  static float ave=0.0f;
+  static int i=0;
   float level=0.f;
   float BTV=Vmonitor();
   if(BTV>PowerV_Max)
@@ -82,7 +86,17 @@ inline float BatteryLevel()
   if(BTV<PowerV_Min)
     BTV=PowerV_Min;
   level=mapfloat(BTV,PowerV_Min,PowerV_Max,0,100);
-  return level;
+  i++;
+  sum+=level;
+  if(level!=0&&ave==0)
+    ave=level;
+  if(i>=n)
+  {
+    ave=sum/n;
+    sum=0.f;
+    i=0;
+  }
+  return ave;
 }
 
 inline bool LowV()

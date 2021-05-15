@@ -333,6 +333,10 @@ int ESP32Mather::setup_ROS()
     /*melody*/
     xTaskCreatePinnedToCore(melodytask,"Melody task",1024,NULL,0,NULL,1);
     tasksel=STARTTASK;
+    #if (ESP_MODE == ESP_PS3)
+    /*PS3*/
+    PS3init();
+    #endif
     /*end*/
     run.flag.Start=true;
     tone(beep,246);
