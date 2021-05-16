@@ -57,6 +57,7 @@ void ESPROStask(void *arg)
     while (1)
     {
         double q0,q1,q2,q3;
+        //EulerAnglesToQuaternion(-1*odm.roll(ODOM_RAD),-1*odm.pitch(ODOM_RAD),-1*odm.yaw(ODOM_RAD),q0,q1,q2,q3);
         EulerAnglesToQuaternion(-1*odm.roll(ODOM_RAD),-1*odm.pitch(ODOM_RAD),odm.wyaw(ODOM_RAD),q0,q1,q2,q3);
         geometry_msgs::Quaternion odom_quat;
         odom_quat.w=q0;

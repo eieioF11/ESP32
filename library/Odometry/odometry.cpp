@@ -131,7 +131,7 @@ void Odometry::update_posture(float dt)
         Roll  = kalmanX.getAngle((float)ARoll,gx, dt);
         Pitch = kalmanY.getAngle((float)APitch,gy, dt);
         //Trapezoidal integral
-        if(abs(gz)<abs(GyroZrange))
+        if(fabs(gz)<fabs(GyroZrange))
             gz=0.0;
         Yaw += (preval + gz) * dt / 2.f;
         preval = gz;

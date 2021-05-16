@@ -42,7 +42,8 @@ void Main(Flag_t *flag)
 		Vx=Vy=Angular=0;
     }
 	float BTL=BatteryLevel();
-	//printf("%f[v],%f,%f,%f\n\r",Vmonitor(),odm.x(ODOM_m),odm.y(ODOM_m),odm.wyaw());
+	//printf("(max,min)x(%f,%f),y(%f,%f),z(%f,%f)",mpu.read(MagX_max),mpu.read(MagX_min),mpu.read(MagY_max),mpu.read(MagY_min),mpu.read(MagZ_max),mpu.read(MagZ_min));
+	//printf(",%f,%f,%f/%f\n\r",odm.x(ODOM_m),odm.y(ODOM_m),odm.yaw(),mpu.read(GyroZ));
 	//printf("%f[v],%f[%]\n\r",Vmonitor(),BTL);
 	ROS_EMARGENCYSTOP=(bool)ESP32M.EMARGENCYSTOP();
 	if(BTL<LowLevel&&BTL!=0.f)

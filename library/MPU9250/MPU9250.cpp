@@ -1,12 +1,19 @@
 #include "MPU9250.h"
 #define samplesize 100
-
+/*
 #define MXmin -37.061
 #define MXmax 27.246
 #define MYmin -23.145
 #define MYmax 44.531
 #define MZmin -19.043
 #define MZmax 55.371
+*/
+#define MXmin -23.144531
+#define MXmax  50.097656
+#define MYmin -31.640625
+#define MYmax  37.207031
+#define MZmin - 9.521484
+#define MZmax  58.886719
 
 MPU9250::MPU9250(){};
 void MPU9250::setup()
@@ -147,6 +154,12 @@ float MPU9250::read(rmode mode)
         case MagX:return magX-mXoff;
         case MagY:return magY-mYoff;
         case MagZ:return magZ-mZoff;
+        case MagX_max:return mXmax;
+        case MagY_max:return mYmax;
+        case MagZ_max:return mZmax;
+        case MagX_min:return mXmin;
+        case MagY_min:return mYmin;
+        case MagZ_min:return mZmin;
         case Temp:return tempMPU9250;
     }
     return -1;

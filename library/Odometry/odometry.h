@@ -35,7 +35,7 @@ extern "C"
 #define ODOM_m 0.001f
 
 //Gyro sensor Z-axis error
-#define GyroZrange 0.15
+#define GyroZrange 0.2f
 
 typedef enum
 {

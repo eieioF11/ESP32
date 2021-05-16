@@ -75,6 +75,12 @@ enum rmode
     MagX,
     MagY,
     MagZ,
+    MagX_max,
+    MagY_max,
+    MagZ_max,
+    MagX_min,
+    MagY_min,
+    MagZ_min,
     Temp
 };
 class MPU9250
