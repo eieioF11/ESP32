@@ -8,6 +8,11 @@ tf::TransformBroadcaster broadcaster;
 nav_msgs::Odometry odom;
 ros::Publisher odom_pub("odom",&odom);
 
+sensor_msgs::Imu imu;
+sensor_msgs::MagneticField mag;
+ros::Publisher pubimu("imu/data_raw", &imu);
+ros::Publisher pubmag("imu/magnetic_field", &mag);
+
 Speed Tw_Vx(Speed_V,ODOM_R*ODOM_m);
 Speed Tw_Vy(Speed_V,ODOM_R*ODOM_m);
 Speed Tw_Angular(Speed_W,ODOM_R*ODOM_m);
@@ -50,6 +55,8 @@ void ESPROStask(void *arg)
 {
     nh.getHardware()->setBaud(115200); //通信速度を115200に設定
     nh.initNode();                     //ノードの初期化
+    nh.advertise(pubimu);
+    nh.advertise(pubmag);
     nh.subscribe(sub);
     nh.advertise(odom_pub);
     broadcaster.init(nh);
@@ -88,6 +95,24 @@ void ESPROStask(void *arg)
         odom.twist.twist.linear.y = 0;
         odom.twist.twist.angular.z = odm.Angular(ODOM_RAD);
         odom_pub.publish(&odom);
+
+        //IMUデータ送信
+        imu.header.frame_id = "imu_link";
+        imu.header.stamp = nh.now();
+        imu.angular_velocity.x = mpu.read(GyroX)*DEG_TO_RAD;
+        imu.angular_velocity.y = mpu.read(GyroY)*DEG_TO_RAD;
+        imu.angular_velocity.z = mpu.read(GyroZ)*DEG_TO_RAD; // [rad/sec]
+        imu.linear_acceleration.x = mpu.read(AccX);
+        imu.linear_acceleration.y = mpu.read(AccY);
+        imu.linear_acceleration.z = mpu.read(AccZ);
+        pubimu.publish(&imu);
+
+        mag.header.frame_id = "imu_link";
+        mag.header.stamp = nh.now();
+        mag.magnetic_field.x = mpu.read(MagX);
+        mag.magnetic_field.y = mpu.read(MagY);
+        mag.magnetic_field.z = mpu.read(MagZ); // [μT]
+        pubmag.publish(&mag);
 
         nh.spinOnce();
         vTaskDelayUntil(&lt, 100 / portTICK_RATE_MS);
