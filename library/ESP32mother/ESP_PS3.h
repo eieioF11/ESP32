@@ -15,7 +15,6 @@ kybode comand
 #include "Setup.h"
 #include <Arduino.h>
 #include "math.h"
-#include "MPU9250.h"
 #include "Timer.h"
 #include "stprint.h"
 

@@ -9,7 +9,7 @@
 /*Passive*/
 #include "Lider.h"
 #include "Lightsensor.h"
-#include "MPU9250.h"
+#include "SparkFunMPU9250-DMP.h"
 #include "Encoder.h"
 /*Active*/
 #include "Two_wheels.h"
@@ -28,14 +28,14 @@
 #define LowLevel   60.0f
 
 #if defined __cplusplus
-extern "C" {
+    extern "C" {
 #endif
 //Serial
 extern MSPI spi;
 extern MI2C i2c;
 //Sensor
 extern Lightsensor l1;
-extern MPU9250 mpu;
+extern MPU9250_DMP imu;
 extern Lider lider;
 //Odometry
 extern Odometry odm;

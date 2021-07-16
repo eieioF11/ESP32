@@ -8,11 +8,6 @@ tf::TransformBroadcaster broadcaster;
 nav_msgs::Odometry odom;
 ros::Publisher odom_pub("odom",&odom);
 
-sensor_msgs::Imu imu;
-sensor_msgs::MagneticField mag;
-ros::Publisher pubimu("imu/data_raw", &imu);
-ros::Publisher pubmag("imu/magnetic_field", &mag);
-
 Speed Tw_Vx(Speed_V,ODOM_R*ODOM_m);
 Speed Tw_Vy(Speed_V,ODOM_R*ODOM_m);
 Speed Tw_Angular(Speed_W,ODOM_R*ODOM_m);
@@ -35,7 +30,7 @@ void messageCb(const geometry_msgs::Twist &twist) //Twistを受け取ったら�
 }
 ros::Subscriber<geometry_msgs::Twist> sub("cmd_vel", &messageCb); //cmd_velとしてTwistを受け取ったら、messageCbという関数が呼び出される
 
-void EulerAnglesToQuaternion(double roll, double pitch, double yaw,
+/*void EulerAnglesToQuaternion(double roll, double pitch, double yaw,
                             double& q0, double& q1, double& q2, double& q3)
 {
     double cosRoll = cos(roll / 2.0);
@@ -49,23 +44,27 @@ void EulerAnglesToQuaternion(double roll, double pitch, double yaw,
     q1 = sinRoll * cosPitch * cosYaw - cosRoll * sinPitch * sinYaw;
     q2 = cosRoll * sinPitch * cosYaw + sinRoll * cosPitch * sinYaw;
     q3 = cosRoll * cosPitch * sinYaw - sinRoll * sinPitch * cosYaw;
-}
+}*/
 
 void ESPROStask(void *arg)
 {
     nh.getHardware()->setBaud(115200); //通信速度を115200に設定
     nh.initNode();                     //ノードの初期化
-    nh.advertise(pubimu);
-    nh.advertise(pubmag);
     nh.subscribe(sub);
+    //nh.advertise(pubimu);
+    //nh.advertise(pubmag);
     nh.advertise(odom_pub);
     broadcaster.init(nh);
     portTickType lt = xTaskGetTickCount();
     while (1)
     {
-        double q0,q1,q2,q3;
+        //double q0,q1,q2,q3;
         //EulerAnglesToQuaternion(-1*odm.roll(ODOM_RAD),-1*odm.pitch(ODOM_RAD),-1*odm.yaw(ODOM_RAD),q0,q1,q2,q3);
-        EulerAnglesToQuaternion(-1*odm.roll(ODOM_RAD),-1*odm.pitch(ODOM_RAD),odm.wyaw(ODOM_RAD),q0,q1,q2,q3);
+        //EulerAnglesToQuaternion(-1*odm.roll(ODOM_RAD),-1*odm.pitch(ODOM_RAD),odm.wyaw(ODOM_RAD),q0,q1,q2,q3);
+        float q0 = imu.calcQuat(imu.qw);
+        float q1 = -1*imu.calcQuat(imu.qx);
+        float q2 = -1*imu.calcQuat(imu.qy);
+        float q3 = imu.calcQuat(imu.qz);
         geometry_msgs::Quaternion odom_quat;
         odom_quat.w=q0;
         odom_quat.x=q1;
@@ -96,26 +95,8 @@ void ESPROStask(void *arg)
         odom.twist.twist.angular.z = odm.Angular(ODOM_RAD);
         odom_pub.publish(&odom);
 
-        //IMUデータ送信
-        imu.header.frame_id = "imu_link";
-        imu.header.stamp = nh.now();
-        imu.angular_velocity.x = mpu.read(GyroX)*DEG_TO_RAD;
-        imu.angular_velocity.y = mpu.read(GyroY)*DEG_TO_RAD;
-        imu.angular_velocity.z = mpu.read(GyroZ)*DEG_TO_RAD; // [rad/sec]
-        imu.linear_acceleration.x = mpu.read(AccX);
-        imu.linear_acceleration.y = mpu.read(AccY);
-        imu.linear_acceleration.z = mpu.read(AccZ);
-        pubimu.publish(&imu);
-
-        mag.header.frame_id = "imu_link";
-        mag.header.stamp = nh.now();
-        mag.magnetic_field.x = mpu.read(MagX);
-        mag.magnetic_field.y = mpu.read(MagY);
-        mag.magnetic_field.z = mpu.read(MagZ); // [μT]
-        pubmag.publish(&mag);
-
         nh.spinOnce();
-        vTaskDelayUntil(&lt, 100 / portTICK_RATE_MS);
+        vTaskDelayUntil(&lt, 200 / portTICK_RATE_MS);
     }
 }
 #endif

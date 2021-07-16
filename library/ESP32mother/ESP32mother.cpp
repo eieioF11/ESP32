@@ -135,7 +135,8 @@ void setfile_read()
 void SDlog(void *arg)
 {
     char FILEname[25];
-    if(sd.begin(SD_MISO,SD_MOSI,SD_SCLK,SD_CS))tone(beep,110);
+    if (sd.begin(SD_MISO, SD_MOSI, SD_SCLK, SD_CS))
+        tone(beep, 110);
     setfile_read();
     if(SDCH()==0)
     {
@@ -155,7 +156,7 @@ void SDlog(void *arg)
         else
         {
             fprintf(f,"No.%d\n<Record start>\n\n",mem);
-            fprintf(f,"time[ms],CPU[degree Celsius],Outside[degree Celsius],udpmode,I2CError,motor1[rps],motor2[rps],LightSensor 1,2,3,4,5,Switch,Accel x,y,z,Gyro x,y,z,Mag x,y,z,System Status,MAIN task,Battery voltage[V],Emergency Stop,\n");
+            fprintf(f,"time[ms],CPU[degree Celsius],udpmode,I2CError,motor1[rps],motor2[rps],LightSensor 1,2,3,4,5,Switch,System Status,MAIN task,Battery voltage[V],Emergency Stop,\n");
             digitalWrite(STBY, HIGH);
             delay(500);
             digitalWrite(STBY, LOW);
@@ -192,7 +193,7 @@ void SDlog(void *arg)
                     stledinterval=50;
                 }
                 else
-                    fprintf(f,"%5ld,%.2f,%.2f,%s,%s,%7.3f,%7.3f,%3d,%3d,%3d,%3d,%3d,%d%d,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%s,%s,%f,%d\n",micros(),CPUTemp(),mpu.read(Temp),udpmode,i2cerror(I2C_Error),md[0]->now_val,md[1]->now_val,l1.read(0),l1.read(1),l1.read(2),l1.read(3),l1.read(4),l1.swread(sw1),l1.swread(sw2),mpu.read(AccX),mpu.read(AccY),mpu.read(AccZ),mpu.read(GyroX),mpu.read(GyroY),mpu.read(GyroZ),mpu.read(MagX),mpu.read(MagY),mpu.read(MagZ),ESP32M.Systemstatus(),ESP32M.Taskstatus(),Vmonitor(),ESP32M.EMARGENCYSTOP());
+                    fprintf(f, "%5ld,%.2f,%s,%s,%7.3f,%7.3f,%3d,%3d,%3d,%3d,%3d,%d%d,%s,%s,%f,%d\n", micros(), CPUTemp(), udpmode, i2cerror(I2C_Error), md[0]->now_val, md[1]->now_val, l1.read(0), l1.read(1), l1.read(2), l1.read(3), l1.read(4), l1.swread(sw1), l1.swread(sw2), ESP32M.Systemstatus(), ESP32M.Taskstatus(), Vmonitor(), ESP32M.EMARGENCYSTOP());
                 fclose(f);
             }
             else

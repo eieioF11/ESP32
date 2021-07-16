@@ -29,8 +29,22 @@ Trapezoid T(&odm);
 
 void setup()
 {
-	ESPtask_i2c_init = []() {
-		mpu.setup();
+	ESPtask_i2c_init = []()
+	{
+		if (imu.begin() != INV_SUCCESS)
+		{
+			while (1)
+			{
+				Serial.println("Unable to communicate with MPU-9250");
+				Serial.println("Check connections, and try again.");
+				Serial.println();
+				delay(5000);
+			}
+		}
+		imu.dmpBegin(DMP_FEATURE_6X_LP_QUAT |  // Enable 6-axis quat
+						 DMP_FEATURE_GYRO_CAL, // Use gyro calibration
+					 10);					   // Set DMP FIFO rate to 10 Hz
+											   //mpu.setup();
 		lider.setup();
 	}; //i2cを使用するものの初期化
 	ESPtask_i2c_while = []() {
@@ -42,7 +56,17 @@ void setup()
 			break;
 		case 1:
 			I2C_Error = (i2c_err_t)l1.com();
-			mpu.update();
+			// Check for new data in the FIFO
+			if (imu.fifoAvailable())
+			{
+				// Use dmpUpdateFifo to update the ax, gx, mx, etc. values
+				if (imu.dmpUpdateFifo() == INV_SUCCESS)
+				{
+					// computeEulerAngles can be used -- after updating the
+					// quaternion values -- to estimate roll, pitch, and yaw
+					imu.computeEulerAngles();
+				}
+			}
 			ct = -1;
 			break;
 		}

@@ -3,7 +3,7 @@
 MSPI spi(&SPI);
 MI2C i2c(&Wire);
 Odometry odm;
-MPU9250 mpu;
+MPU9250_DMP imu;
 Lider lider;
 Lightsensor l1(&i2c,LSADDRA);
 Chattering MOUNT(10,300,300,400);
@@ -53,23 +53,15 @@ void Odmetryupdate(void *arg)
         printf(".");
         delay(50);
     }
-    printf("\n\rsensor init finish!\n\r");
-    while(odm.zeroset(500))
-	{
-        //odm.setsixaxis(mpu.read(AccX),mpu.read(AccY),mpu.read(AccZ),mpu.read(GyroX),mpu.read(GyroY),mpu.read(GyroZ));
-		odm.setnineaxis(mpu.read(AccX),mpu.read(AccY),mpu.read(AccZ),mpu.read(GyroX),mpu.read(GyroY),mpu.read(GyroZ),mpu.read(MagX),mpu.read(MagY),mpu.read(MagZ));
-        delay(1);
-	}
     odm.setup(TWOWHEEL);
     portTickType lt = xTaskGetTickCount();
     while(1)
     {
         if(!OTAFLAG)
         {
-            //odm.setsixaxis(mpu.read(AccX),mpu.read(AccY),mpu.read(AccZ),mpu.read(GyroX),mpu.read(GyroY),mpu.read(GyroZ));
-            odm.setnineaxis(mpu.read(AccX),mpu.read(AccY),mpu.read(AccZ),mpu.read(GyroX),mpu.read(GyroY),mpu.read(GyroZ),mpu.read(MagX),mpu.read(MagY),mpu.read(MagZ));
+            odm.setposture(imu.pitch, imu.roll, imu.yaw);
             #if (MOTORMODE ==PID_)
-            odm.setspeed(md[0]->now_val,md[1]->now_val);
+                odm.setspeed(md[0]->now_val, md[1]->now_val);
             #endif
             odm.update();
         }
