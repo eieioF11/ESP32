@@ -59,7 +59,7 @@ void Odmetryupdate(void *arg)
     {
         if(!OTAFLAG)
         {
-            odm.setposture(imu.pitch, imu.roll, imu.yaw);
+            odm.setposture(-1*imu.pitch,-1*imu.roll,-1*imu.yaw);
             #if (MOTORMODE ==PID_)
                 odm.setspeed(md[0]->now_val, md[1]->now_val);
             #endif

@@ -206,7 +206,7 @@ void Odometry::update()
     {
         //angular=W*dt*RAD_TO_DEG;
         //rc+=angular;
-        rc = Yaw*-1;
+        rc = Yaw;
         //rc=kalmanYaw.getAngle((float)yaw(),W*RAD_TO_DEG,dt);
         //rc=0;
         X += rx * cosf(rc * DEG_TO_RAD) * dt;
