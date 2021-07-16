@@ -7,5 +7,10 @@
 			"path": "../../library"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"files.associations": {
+			"cmath": "cpp",
+			"complex": "cpp"
+		}
+	}
 }

@@ -15,8 +15,9 @@ class Speed
             uint8_t mode;
             float rps;
             float R;
+            float lim;
         public:
-            Speed(uint8_t mode,float R);//R[m]
+            Speed(uint8_t mode, float R,float lim=1.0); //R[m]
             Speed& operator = (float val);//[m/s] or [rad/s]
             operator float ();
 };

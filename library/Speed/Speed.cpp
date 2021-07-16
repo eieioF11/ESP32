@@ -1,10 +1,11 @@
 #include "Speed.h"
 
-Speed::Speed(uint8_t mode,float R)
+Speed::Speed(uint8_t mode,float R,float lim)
 {
     this->mode=mode;
     this->rps=0.f;
     this->R=R;
+    this->lim=lim;
 }
 
 /*
@@ -25,5 +26,8 @@ Speed& Speed::operator = (float val)
 
 Speed::operator float ()
 {
-    return this->rps;
+    if(fabs(this->rps)<lim)
+        return this->rps;
+    else
+        return lim * (this->rps/fabs(this->rps));
 }

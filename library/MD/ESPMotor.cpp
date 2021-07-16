@@ -1,4 +1,5 @@
 #include "ESPMotor.h"
+#define Lim 0.5
 
 ESPMotor::ESPMotor(int pin1_,int pin2_,gpio_num_t sp,int A,int B,int resolution_,pcnt_unit_t pcnt_,float dt)
 {
@@ -42,7 +43,7 @@ void ESPMotor::Move(float val)
     e->reset();
   }
   speed+=pidmd->output(val,e->get_rps());
-  if(speed>1.0)speed=1.0;if(speed<-1.0)speed=-1.0;
+  if(speed>=Lim)speed=Lim;if(speed<=-1*Lim)speed=-1.0*Lim;
   t->move(speed);
 }
 void ESPMotor::Update()
