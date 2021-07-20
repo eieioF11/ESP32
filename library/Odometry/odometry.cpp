@@ -204,8 +204,8 @@ void Odometry::update()
     }
     else if(mode==TWOWHEEL)
     {
-        angular=W*dt*RAD_TO_DEG;
-        //rc+=angular;
+        angular=W*RAD_TO_DEG;
+        //rc+=angular*dt;
         rc = Yaw;
         //rc=kalmanYaw.getAngle((float)yaw(),W*RAD_TO_DEG,dt);
         //rc=0;
