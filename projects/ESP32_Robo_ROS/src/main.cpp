@@ -67,7 +67,7 @@ void Main(Flag_t *flag)
     }
 	float BTL=BatteryLevel();
 	//printf(",%f,%f,%f\n\r",odm.x(ODOM_m),odm.y(ODOM_m),odm.yaw());
-	//printf("%f[v],%f[%]\n\r",Vmonitor(),BTL);
+	//printf("%f[v],%f[%],%d,%d\n\r", Vmonitor(), BTL , ROS_EMARGENCYSTOP);
 	ROS_EMARGENCYSTOP=(bool)ESP32M.EMARGENCYSTOP();
 	if(BTL<LowLevel&&BTL!=0.f)
 		ESP32M.BTError();
@@ -77,8 +77,8 @@ void Main(Flag_t *flag)
 	Vx = (float)Tw_Vx;
 	Angular = (float)Tw_Angular;
 	bool b=false;
-	//if(Vy==0.f && Vx==0.f && Angular==0.0f)
-		//b=PS3ControllerTw(&Vx,&Vy,&Angular);
+	if(Vy==0.f && Vx==0.f && Angular==0.0f)
+		b=PS3ControllerTw(&Vx,&Vy,&Angular);
 	if(b||(l1.swread(sw1)&&l1.swread(sw2)&&Vx>0))
 		wheel->Stop();
 	else
