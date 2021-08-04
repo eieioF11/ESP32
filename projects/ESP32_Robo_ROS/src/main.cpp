@@ -79,7 +79,7 @@ void Main(Flag_t *flag)
 	bool b=false;
 	if(Vy==0.f && Vx==0.f && Angular==0.0f)
 		b=PS3ControllerTw(&Vx,&Vy,&Angular);
-	if(b||(l1.swread(sw1)&&l1.swread(sw2)&&Vx>0))
+	if(b||((l1.swread(sw1)||l1.swread(sw2))&&Vx>0))
 		wheel->Stop();
 	else
 		wheel->Move(Vx, Vy, Angular);
