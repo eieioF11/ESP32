@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ESP32-ROBO</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="text/javascript" src="websocket.js"></script>
+    <script type="text/javascript" src="checkbox.js"></script>
+</head>
+<body onload="draw();">
+		<!--タイトル-->
+		<div class="TITLE">
+			<h1>ESP32-ROBOT Configuration</h1>
+		</div>
+		<!--タブ-->
+		<div class="tabs">
+			<!--設定タブ-->
+			<input id="all" type="radio" name="tab_item" checked />
+			<label class="tab_item" for="all">SetUp</label>
+			<!--コントロールタブ-->
+			<input id="programming" type="radio" name="tab_item" />
+			<label class="tab_item" for="programming">Control</label>
+			<!--その他タブ-->
+			<input id="design" type="radio" name="tab_item" />
+			<label class="tab_item" for="design">Other</label>
+			<!--設定タブ内容-->
+			<div class="tab_content" id="all_content">
+				<div class="tab_content_description">
+					<input type="checkbox" id="5" onchange="sendCheckbox(event)">LED</checkbox>
+				</div>
+			</div>
+			<!--コントロールタブ内容-->
+			<div class="tab_content" id="programming_content">
+				<div class="tab_content_description">
+					<p>
+						<canvas id="Stick" width="200" height="200"></canvas>
+						<script  type="text/javascript" src="Window.js"></script>
+					</p>
+					<p>
+						X:<input type="text" id="txtX"/>
+						Y:<input type="text" id="txtY"/>
+					</p>
+					<p>
+						<a href="#" class="btn-real">
+							<i class="fa fa-power-off" id="4" onclick="sendembutton(event)">STOP</i>
+						</a>
+						<a>
+							<button type="button" id="1" value="Exec" onclick="sendselbutton(event)">SELECT</button>
+						</a>
+					</p>
+				</div>
+			</div>
+			<!--その他タブ内容-->
+			<div class="tab_content" id="design_content">
+				<div class="tab_content_description">
+				</div>
+			</div>
+        </div>
+	</body>
+</html>

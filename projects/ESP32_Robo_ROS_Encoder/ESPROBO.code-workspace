@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../../library"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"cmath": "cpp",
+			"complex": "cpp"
+		}
+	}
+}
